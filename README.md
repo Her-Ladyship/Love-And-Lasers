@@ -63,7 +63,7 @@ _(Coming soon — placeholder for in-game screenshots and NES-style manual pages
 ## 💾 Project Status
 
 - [x] Initial repo setup
-- [ ] Build system in place
+- [x] Build system in place
 - [ ] Core gameplay loop prototype
 - [ ] First mission design
 - [ ] Dialogue system functional
@@ -73,10 +73,10 @@ _(Coming soon — placeholder for in-game screenshots and NES-style manual pages
 
 ## 👽 Credits
 
-**Developer:** [Your Name Here]  
+**Developer:** Her Ladyship Games  
 **University Project:** 2D NES Game Development (2025)
 
-Special thanks to the 8-bit gods and cursed lovers across the stars.
+Special thanks to the 8-bit gods.
 
 ---
 
