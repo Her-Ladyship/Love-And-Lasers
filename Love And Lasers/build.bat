@@ -1,7 +1,7 @@
 
 @echo off
 
-set name="blank"
+set name="main"
 
 set CC65_HOME=..\cc65\
 
