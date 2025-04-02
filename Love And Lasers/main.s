@@ -22,7 +22,9 @@
 	.export		_palette
 	.export		_game_state
 	.export		_frame_count
-	.export		_update_title_screen
+	.export		_selected_crewmate
+	.export		_display_press_start
+	.export		_display_press_A
 	.export		_main
 
 .segment	"DATA"
@@ -30,6 +32,8 @@
 _game_state:
 	.byte	$00
 _frame_count:
+	.byte	$00
+_selected_crewmate:
 	.byte	$00
 
 .segment	"RODATA"
@@ -51,33 +55,33 @@ _palette:
 	.byte	$00
 	.byte	$00
 	.byte	$00
-S0002:
-	.byte	$4C,$4F,$56,$45,$20,$26,$20,$4C,$41,$53,$45,$52,$53,$21,$00
 S0003:
-	.byte	$47,$41,$4D,$45,$20,$53,$54,$41,$52,$54,$45,$44,$00
+	.byte	$42,$52,$49,$45,$46,$49,$4E,$47,$20,$47,$4F,$45,$53,$20,$48,$45
+	.byte	$52,$45,$00
 S0004:
+	.byte	$53,$45,$4C,$45,$43,$54,$20,$59,$4F,$55,$52,$20,$43,$52,$45,$57
+	.byte	$00
+S0006:
+	.byte	$50,$52,$45,$53,$53,$20,$41,$20,$42,$55,$54,$54,$4F,$4E,$00
+S0002:
+	.byte	$4C,$4F,$56,$45,$20,$26,$20,$4C,$41,$53,$45,$52,$53,$00
+S0005:
 	.byte	$50,$52,$45,$53,$53,$20,$53,$54,$41,$52,$54,$00
 
 ; ---------------------------------------------------------------
-; void __near__ update_title_screen (void)
+; void __near__ display_press_start (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_update_title_screen: near
+.proc	_display_press_start: near
 
 .segment	"CODE"
 
 ;
-; frame_count++;
+; frame_count++; 
 ;
 	inc     _frame_count
-;
-; vram_adr(NTADR_A(10,17));
-;
-	ldx     #$22
-	lda     #$2A
-	jsr     _vram_adr
 ;
 ; if ((frame_count & 0x20) == 0) {
 ;
@@ -87,8 +91,8 @@ S0004:
 ;
 ; vram_write("PRESS START", 11);
 ;
-	lda     #<(S0004)
-	ldx     #>(S0004)
+	lda     #<(S0005)
+	ldx     #>(S0005)
 	jsr     pushax
 	ldx     #$00
 	lda     #$0B
@@ -115,6 +119,56 @@ L0004:	ldx     #$20
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ display_press_A (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_display_press_A: near
+
+.segment	"CODE"
+
+;
+; frame_count++; 
+;
+	inc     _frame_count
+;
+; if ((frame_count & 0x20) == 0) {
+;
+	lda     _frame_count
+	and     #$20
+	bne     L0005
+;
+; vram_write("PRESS A BUTTON", 14);
+;
+	lda     #<(S0006)
+	ldx     #>(S0006)
+	jsr     pushax
+	ldx     #$00
+	lda     #$0E
+	jsr     _vram_write
+;
+; } else {
+;
+	jmp     L0004
+;
+; vram_fill(' ', 14);
+;
+L0005:	lda     #$20
+	jsr     pusha
+	ldx     #$00
+	lda     #$0E
+	jsr     _vram_fill
+;
+; vram_adr(NTADR_A(0,0));
+;
+L0004:	ldx     #$20
+	lda     #$00
+	jmp     _vram_adr
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ main (void)
 ; ---------------------------------------------------------------
 
@@ -125,37 +179,37 @@ L0004:	ldx     #$20
 .segment	"CODE"
 
 ;
-; ppu_off(); // screen off
+; ppu_off();
 ;
 	jsr     decsp1
 	jsr     _ppu_off
 ;
-; pal_bg(palette); // load the BG palette
+; pal_bg(palette);
 ;
 	lda     #<(_palette)
 	ldx     #>(_palette)
 	jsr     _pal_bg
 ;
-; vram_adr(NTADR_A(9,14)); // screen is 32 x 30 tiles
+; vram_adr(NTADR_A(10, 12));
 ;
 	ldx     #$21
-	lda     #$C9
+	lda     #$8A
 	jsr     _vram_adr
 ;
-; vram_write("LOVE & LASERS!", 14);
+; vram_write("LOVE & LASERS", 13);
 ;
 	lda     #<(S0002)
 	ldx     #>(S0002)
 	jsr     pushax
 	ldx     #$00
-	lda     #$0E
+	lda     #$0D
 	jsr     _vram_write
 ;
-; ppu_on_all(); // turn on screen 
+; ppu_on_all();
 ;
-L0009:	jsr     _ppu_on_all
+L000C:	jsr     _ppu_on_all
 ;
-; ppu_wait_nmi(); // sync with the screen refresh
+; ppu_wait_nmi();
 ;
 L0002:	jsr     _ppu_wait_nmi
 ;
@@ -169,11 +223,17 @@ L0002:	jsr     _ppu_wait_nmi
 ; if (game_state == STATE_TITLE) {
 ;
 	lda     _game_state
-	bne     L000A
+	bne     L000D
 ;
-; update_title_screen();
+; vram_adr(NTADR_A(11,15));
 ;
-	jsr     _update_title_screen
+	ldx     #$21
+	lda     #$EB
+	jsr     _vram_adr
+;
+; display_press_start();
+;
+	jsr     _display_press_start
 ;
 ; if (pad1 & PAD_START) {
 ;
@@ -186,6 +246,12 @@ L0002:	jsr     _ppu_wait_nmi
 ;
 	jsr     _ppu_off
 ;
+; vram_adr(NTADR_A(0, 0));
+;
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
 ; vram_fill(0, 32*30);
 ;
 	lda     #$00
@@ -194,32 +260,100 @@ L0002:	jsr     _ppu_wait_nmi
 	lda     #$C0
 	jsr     _vram_fill
 ;
-; vram_adr(NTADR_A(10, 15));  // This should be dead-centre
+; vram_adr(NTADR_A(7, 12));
 ;
 	ldx     #$21
-	lda     #$EA
+	lda     #$87
 	jsr     _vram_adr
 ;
-; vram_write("GAME STARTED", 12);
+; vram_write("BRIEFING GOES HERE", 18);
 ;
 	lda     #<(S0003)
 	ldx     #>(S0003)
 	jsr     pushax
 	ldx     #$00
-	lda     #$0C
+	lda     #$12
 	jsr     _vram_write
 ;
-; game_state = STATE_GAME;
+; game_state = STATE_BRIEFING;
 ;
 	lda     #$01
 	sta     _game_state
 ;
-; else if (game_state == STATE_GAME) {
+; vram_adr(NTADR_A(0, 0));
 ;
-	jmp     L0009
-L000A:	lda     _game_state
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
+; else if (game_state == STATE_BRIEFING) {
+;
+	jmp     L000C
+L000D:	lda     _game_state
 	cmp     #$01
-	bne     L0002
+	bne     L000E
+;
+; vram_adr(NTADR_A(9,15));
+;
+	ldx     #$21
+	lda     #$E9
+	jsr     _vram_adr
+;
+; display_press_A();  
+;
+	jsr     _display_press_A
+;
+; if (pad1 & PAD_A) {
+;
+	ldy     #$00
+	lda     (sp),y
+	and     #$80
+	beq     L0002
+;
+; ppu_off();
+;
+	jsr     _ppu_off
+;
+; vram_adr(NTADR_A(0, 0));
+;
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
+; vram_fill(0, 32*30);
+;
+	lda     #$00
+	jsr     pusha
+	ldx     #$03
+	lda     #$C0
+	jsr     _vram_fill
+;
+; vram_adr(NTADR_A(8, 12));
+;
+	ldx     #$21
+	lda     #$88
+	jsr     _vram_adr
+;
+; vram_write("SELECT YOUR CREW", 16);
+;
+	lda     #<(S0004)
+	ldx     #>(S0004)
+	jsr     pushax
+	ldx     #$00
+	lda     #$10
+	jsr     _vram_write
+;
+; game_state = STATE_SELECT_CREWMATE;
+;
+	lda     #$02
+	sta     _game_state
+;
+; else if (game_state == STATE_SELECT_CREWMATE) {
+;
+	jmp     L000C
+L000E:	lda     _game_state
+	cmp     #$02
+	jne     L0002
 ;
 ; while (1){
 ;
