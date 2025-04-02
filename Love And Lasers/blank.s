@@ -70,10 +70,10 @@ _i:
 	ldx     #>(_palette)
 	jsr     _pal_bg
 ;
-; vram_adr(NTADR_A(9,14)); // screen is 32 x 30 tiles
+; vram_adr(NTADR_A(9,12)); // screen is 32 x 30 tiles
 ;
 	ldx     #$21
-	lda     #$C9
+	lda     #$89
 	jsr     _vram_adr
 ;
 ; i = 0;
@@ -101,7 +101,7 @@ L0004:	ldy     _i
 	lda     _text,y
 	bne     L0002
 ;
-; ppu_on_all(); // turn on screen
+; ppu_on_all(); // turn on screen 
 ;
 	jsr     _ppu_on_all
 ;

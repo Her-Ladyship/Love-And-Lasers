@@ -1,7 +1,3 @@
-; Startup code for cc65 and Shiru's NES library
-; based on code by Groepaz/Hitmen <groepaz@gmx.net>, Ullrich von Bassewitz <uz@cc65.org>
-
-
 
 FT_BASE_ADR		= $0100		;page in RAM, should be $xx00
 FT_DPCM_OFF		= $f000		;$c000..$ffc0, 64-byte steps
@@ -13,31 +9,19 @@ FT_NTSC_SUPPORT	= 1		;undefine to exclude NTSC support
 FT_DPCM_ENABLE  = 0		;undefine to exclude all DMC code
 FT_SFX_ENABLE   = 1		;undefine to exclude all sound effects code
 
-
-
-
-
-;REMOVED initlib
-;this called the CONDES function
-
     .export _exit,__STARTUP__:absolute=1
 	.import push0,popa,popax,_main,zerobss,copydata
 
 ; Linker generated symbols
-	.import __STACK_START__   ,__STACKSIZE__ ;changed
+	.import __STACK_START__   ,__STACKSIZE__
 	.import __ROM0_START__  ,__ROM0_SIZE__
 	.import __STARTUP_LOAD__,__STARTUP_RUN__,__STARTUP_SIZE__
 	.import	__CODE_LOAD__   ,__CODE_RUN__   ,__CODE_SIZE__
 	.import	__RODATA_LOAD__ ,__RODATA_RUN__ ,__RODATA_SIZE__
 	.import NES_MAPPER, NES_PRG_BANKS, NES_CHR_BANKS, NES_MIRRORING
 
-	.importzp _PAD_STATE, _PAD_STATET ;added
+	.importzp _PAD_STATE, _PAD_STATET
     .include "zeropage.inc"
-
-
-
-
-
 
 PPU_CTRL	=$2000
 PPU_MASK	=$2001
@@ -56,8 +40,6 @@ CTRL_PORT2	=$4017
 OAM_BUF		=$0200
 PAL_BUF		=$01c0
 VRAM_BUF	=$0700
-
-
 
 .segment "ZEROPAGE"
 
@@ -101,14 +83,9 @@ RLE_HIGH	=TEMP+1
 RLE_TAG		=TEMP+2
 RLE_BYTE	=TEMP+3
 
-;nesdoug code requires
 VRAM_INDEX:			.res 1
 META_PTR:			.res 2
 DATA_PTR:			.res 2
-
-
-
-
 
 .segment "HEADER"
 
@@ -118,8 +95,6 @@ DATA_PTR:			.res 2
 	.byte <NES_MIRRORING|(<NES_MAPPER<<4)
 	.byte <NES_MAPPER&$f0
 	.res 8,0
-
-
 
 .segment "STARTUP"
 
@@ -135,7 +110,7 @@ _exit:
     inx
     stx PPU_MASK
     stx DMC_FREQ
-    stx PPU_CTRL		;no NMI
+    stx PPU_CTRL
 
 initPPU:
     bit PPU_STATUS
@@ -192,17 +167,14 @@ clearRAM:
     jsr	zerobss
 	jsr	copydata
 
-    lda #<(__STACK_START__+__STACKSIZE__) ;changed
+    lda #<(__STACK_START__+__STACKSIZE__)
     sta	sp
     lda	#>(__STACK_START__+__STACKSIZE__)
-    sta	sp+1            ; Set argument stack ptr
-
-;	jsr	initlib
-; removed. this called the CONDES function
+    sta	sp+1
 
 	lda #%10000000
 	sta <PPU_CTRL_VAR
-	sta PPU_CTRL		;enable NMI
+	sta PPU_CTRL
 	lda #%00000110
 	sta <PPU_MASK_VAR
 
@@ -213,7 +185,7 @@ waitSync3:
 	beq @1
 
 detectNTSC:
-	ldx #52				;blargg's code
+	ldx #52
 	ldy #24
 @1:
 	dex
@@ -250,39 +222,30 @@ detectNTSC:
 	sta PPU_SCROLL
 	sta PPU_SCROLL
 
-	jmp _main			;no parameters
+	jmp _main
 
 	.include "LIB/neslib.s"
 	.include "LIB/nesdoug.s"
 	.include "MUSIC/famitone2.s"
-	
-	
+		
 .segment "RODATA"
 
 music_data:
 ;	.include "music.s"
-
-
 
 	.if(FT_SFX_ENABLE)
 sounds_data:
 ;	.include "sounds.s"
 	.endif
 
-	
-	
 .segment "SAMPLES"
 ;	.incbin "music_dpcm.bin"
 
-
-
 .segment "VECTORS"
-
     .word nmi	;$fffa vblank nmi
     .word start	;$fffc reset
    	.word irq	;$fffe irq / brk
 
 
 .segment "CHARS"
-
 	.incbin "Alpha.chr"

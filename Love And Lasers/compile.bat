@@ -1,3 +1,4 @@
+
 @echo off
 
 set name="blank"
@@ -5,7 +6,6 @@ set name="blank"
 set CC65_HOME=..\cc65\
 
 set path=%path%;%CC65_HOME%\bin\
-
 
 cc65 -Oirs %name%.c --add-source
 ca65 crt0.s
