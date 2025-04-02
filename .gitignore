@@ -1,29 +1,11 @@
-# Ignore compiled ROMs and other build artifacts
-/builds/*
-!builds/.keep   # If you want the folder to stay tracked
-
-# Ignore temporary or editor-specific files
-*.bak
-*.tmp
-*.swp
-*.swo
-*.log
-
-# VS Code, CLion, and other IDEs
-.vscode/
-.idea/
-
-# OS-specific junk
-.DS_Store
-Thumbs.db
-
-# cc65 intermediate files (if using C)
+# Object files
 *.o
-*.lst
-*.map
-*.cfg
-*.sym
 
-# NESASM/ASM6 intermediate files
-*.obj
-*.labels
+# Tools Folders
+cc65/
+FamiStudio/
+FamiTracker/
+Mesen2/
+MesenX/
+NEXXT/
+VSC_NESGameTemplate/BUILD/
