@@ -62,7 +62,7 @@ _(Coming soon — placeholder for in-game screenshots and NES-style manual pages
 
 ## 💾 Project Status
 
-- [ ] Initial repo setup
+- [x] Initial repo setup
 - [ ] Build system in place
 - [ ] Core gameplay loop prototype
 - [ ] First mission design
