@@ -12,19 +12,28 @@
 	.macpack	longbranch
 	.forceimport	__STARTUP__
 	.import		_pal_bg
+	.import		_ppu_wait_nmi
 	.import		_ppu_off
 	.import		_ppu_on_all
+	.import		_pad_poll
 	.import		_vram_adr
-	.import		_vram_put
-	.export		_i
-	.export		_text
+	.import		_vram_fill
+	.import		_vram_write
 	.export		_palette
+	.export		_game_state
+	.export		_frame_count
+	.export		_update_title_screen
 	.export		_main
+
+.segment	"DATA"
+
+_game_state:
+	.byte	$00
+_frame_count:
+	.byte	$00
 
 .segment	"RODATA"
 
-_text:
-	.byte	$4C,$4F,$56,$45,$20,$26,$20,$4C,$41,$53,$45,$52,$53,$21,$00
 _palette:
 	.byte	$0F
 	.byte	$00
@@ -42,12 +51,68 @@ _palette:
 	.byte	$00
 	.byte	$00
 	.byte	$00
+S0002:
+	.byte	$4C,$4F,$56,$45,$20,$26,$20,$4C,$41,$53,$45,$52,$53,$21,$00
+S0003:
+	.byte	$47,$41,$4D,$45,$20,$53,$54,$41,$52,$54,$45,$44,$00
+S0004:
+	.byte	$50,$52,$45,$53,$53,$20,$53,$54,$41,$52,$54,$00
 
-.segment	"BSS"
+; ---------------------------------------------------------------
+; void __near__ update_title_screen (void)
+; ---------------------------------------------------------------
 
-.segment	"ZEROPAGE"
-_i:
-	.res	1,$00
+.segment	"CODE"
+
+.proc	_update_title_screen: near
+
+.segment	"CODE"
+
+;
+; frame_count++;
+;
+	inc     _frame_count
+;
+; vram_adr(NTADR_A(10,17));
+;
+	ldx     #$22
+	lda     #$2A
+	jsr     _vram_adr
+;
+; if ((frame_count & 0x20) == 0) {
+;
+	lda     _frame_count
+	and     #$20
+	bne     L0005
+;
+; vram_write("PRESS START", 11);
+;
+	lda     #<(S0004)
+	ldx     #>(S0004)
+	jsr     pushax
+	ldx     #$00
+	lda     #$0B
+	jsr     _vram_write
+;
+; } else {
+;
+	jmp     L0004
+;
+; vram_fill(' ', 11);
+;
+L0005:	lda     #$20
+	jsr     pusha
+	ldx     #$00
+	lda     #$0B
+	jsr     _vram_fill
+;
+; vram_adr(NTADR_A(0,0));
+;
+L0004:	ldx     #$20
+	lda     #$00
+	jmp     _vram_adr
+
+.endproc
 
 ; ---------------------------------------------------------------
 ; void __near__ main (void)
@@ -62,6 +127,7 @@ _i:
 ;
 ; ppu_off(); // screen off
 ;
+	jsr     decsp1
 	jsr     _ppu_off
 ;
 ; pal_bg(palette); // load the BG palette
@@ -70,44 +136,94 @@ _i:
 	ldx     #>(_palette)
 	jsr     _pal_bg
 ;
-; vram_adr(NTADR_A(9,12)); // screen is 32 x 30 tiles
+; vram_adr(NTADR_A(9,14)); // screen is 32 x 30 tiles
 ;
 	ldx     #$21
-	lda     #$89
+	lda     #$C9
 	jsr     _vram_adr
 ;
-; i = 0;
+; vram_write("LOVE & LASERS!", 14);
 ;
-	lda     #$00
-	sta     _i
-;
-; while(text[i]){
-;
-	jmp     L0004
-;
-; vram_put(text[i]); // this pushes 1 char to the screen
-;
-L0002:	ldy     _i
-	lda     _text,y
-	jsr     _vram_put
-;
-; ++i;
-;
-	inc     _i
-;
-; while(text[i]){
-;
-L0004:	ldy     _i
-	lda     _text,y
-	bne     L0002
+	lda     #<(S0002)
+	ldx     #>(S0002)
+	jsr     pushax
+	ldx     #$00
+	lda     #$0E
+	jsr     _vram_write
 ;
 ; ppu_on_all(); // turn on screen 
 ;
-	jsr     _ppu_on_all
+L0009:	jsr     _ppu_on_all
+;
+; ppu_wait_nmi(); // sync with the screen refresh
+;
+L0002:	jsr     _ppu_wait_nmi
+;
+; pad1 = pad_poll(0);
+;
+	lda     #$00
+	jsr     _pad_poll
+	ldy     #$00
+	sta     (sp),y
+;
+; if (game_state == STATE_TITLE) {
+;
+	lda     _game_state
+	bne     L000A
+;
+; update_title_screen();
+;
+	jsr     _update_title_screen
+;
+; if (pad1 & PAD_START) {
+;
+	ldy     #$00
+	lda     (sp),y
+	and     #$10
+	beq     L0002
+;
+; ppu_off();
+;
+	jsr     _ppu_off
+;
+; vram_fill(0, 32*30);
+;
+	lda     #$00
+	jsr     pusha
+	ldx     #$03
+	lda     #$C0
+	jsr     _vram_fill
+;
+; vram_adr(NTADR_A(10, 15));  // This should be dead-centre
+;
+	ldx     #$21
+	lda     #$EA
+	jsr     _vram_adr
+;
+; vram_write("GAME STARTED", 12);
+;
+	lda     #<(S0003)
+	ldx     #>(S0003)
+	jsr     pushax
+	ldx     #$00
+	lda     #$0C
+	jsr     _vram_write
+;
+; game_state = STATE_GAME;
+;
+	lda     #$01
+	sta     _game_state
+;
+; else if (game_state == STATE_GAME) {
+;
+	jmp     L0009
+L000A:	lda     _game_state
+	cmp     #$01
+	bne     L0002
 ;
 ; while (1){
 ;
-L000A:	jmp     L000A
+	jmp     L0002
 
 .endproc
 
