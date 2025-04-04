@@ -6,16 +6,19 @@
 #define LT_GY 0x10
 #define WHITE 0x30
 #define PRESS_A_LEN 14 // MIGHT BE HOLDOVER FROM OLD CODE
+
+#define MAX_BULLETS 4
+#define BULLET_RIGHT_LIMIT 252
 #define WRITE(text, x, y) multi_vram_buffer_horz(text, sizeof(text)-1, NTADR_A(x, y))
 #define BLINK_MSG(msg, x, y) display_blinking_message(msg, sizeof(msg)-1, x, y)
 
 #pragma bss-name(push, "ZEROPAGE")
 
 const unsigned char palette[] = {
-	BLACK, DK_GY, LT_GY, WHITE,
-	0,0,0,0,
-	0,0,0,0,
-	0,0,0,0
+	0x0f, 0x01, 0x21, 0x31,  // Background (black + greys)
+	0x0f, 0x17, 0x27, 0x37,  // Sprite palette 0 (red tones)
+	0, 0, 0, 0,              // unused
+	0, 0, 0, 0
 };
 
 enum GameState {
@@ -32,22 +35,41 @@ unsigned char game_state = STATE_TITLE;
 unsigned char frame_count = 0;
 unsigned char selected_crewmate = 0;
 unsigned char shmup_screen_drawn = 0;
+unsigned char shmup_started = 0;
 unsigned char dialogue_shown = 0;
 unsigned char ending_shown = 0;
 unsigned char i = 0;
 
 unsigned char pad1, pad1_old;
 
-void display_press_start(void);
-void display_press_A(void);
+unsigned char player_x = 32;
+unsigned char player_y = 120;
+
+unsigned char bullet_x[MAX_BULLETS];
+unsigned char bullet_y[MAX_BULLETS];
+unsigned char bullet_active[MAX_BULLETS];
+
+const unsigned char player_sprite[] = {
+	0, 0, 0x41, 0,  // Tile 0x41 ("A" in standard ASCII CHR)
+	128
+};
+
+const unsigned char bullet_sprite[] = {
+	0, 0, 0x42, 0,  // Use tile 0x42 ('B' maybe?) for now
+	128
+};
+
 void update_arrow(void);
 void clear_screen(void);
 void draw_crewmate_menu(void);
 void display_blinking_message(const char* message, unsigned char len, unsigned char x, unsigned char y);
+void clear_line(unsigned char y);
+void clear_all_bullets(void);
 
 void main(void) {
 	ppu_off();
-	pal_bg(palette);
+	pal_bg(palette);     	// for background
+	pal_spr(&palette[4]); 	// for sprite colours
 	set_vram_buffer();
 	ppu_on_all();
 
@@ -76,7 +98,7 @@ void main(void) {
 				ppu_off();
 				clear_screen();
 				WRITE("SELECT YOUR CREWMATE", 6, 4);
-				WRITE("                                ", 0, 15);
+				clear_line(15);
 				selected_crewmate = 0;
 				draw_crewmate_menu();
 				ppu_on_all();
@@ -134,27 +156,85 @@ void main(void) {
 			if (!shmup_screen_drawn) {
 				ppu_off();
 				clear_screen();
-				ppu_on_all();
 
-				WRITE("SHMUP GOES HERE", 8, 10);
 				if (selected_crewmate == 0) {
-					WRITE("CREWMATE: ZARNELLA", 6, 14);
+					WRITE("ZARNELLA:", 11, 10);
+					WRITE("IF YOU GET ME KILLED,", 5, 13);
+					WRITE("I'LL HAUNT YOU PERSONALLY", 3, 15);
 				}
 				else if (selected_crewmate == 1) {
-					WRITE("CREWMATE: LUMA-6", 7, 14);
+					WRITE("LUMA-6:", 12, 10);
+					WRITE("TACTICAL SYSTEMS GREEN -", 4, 13);
+					WRITE("LET'S MAKE THIS EFFICIENT", 3, 15);
 				}
 				else {
-					WRITE("CREWMATE: MR BUBBLES", 5, 14);
+					WRITE("MR BUBBLES:", 11, 10);
+					WRITE("BUBBLE MODE ENGAGED!", 6, 13);
 				}
+
 				shmup_screen_drawn = 1;
-			}
-			// Restart option
-			if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
-				ppu_off();
-				clear_screen();
-				shmup_screen_drawn = 0;
-				game_state = STATE_DIALOGUE;
 				ppu_on_all();
+			}
+
+			// Pre-mission phase
+			if (shmup_started == 0) {
+				BLINK_MSG("PRESS A TO START MISSION", 4, 24);
+
+				if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
+					ppu_off();
+					clear_screen();
+					clear_line(24);
+					shmup_started = 1;
+					ppu_on_all();
+				}
+			}
+			else {
+				// SHMUP gameplay goes here
+
+				// Handle input
+				if (pad1 & PAD_LEFT && player_x > 8) player_x--;
+				if (pad1 & PAD_RIGHT && player_x < 40) player_x++;
+				if (pad1 & PAD_UP && player_y > 0) player_y--;
+				if (pad1 & PAD_DOWN && player_y < 232) player_y++;
+
+				// Draw player sprite at current position
+				oam_clear();
+				oam_meta_spr(player_x, player_y, player_sprite);
+
+				if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
+					for (i = 0; i < MAX_BULLETS; ++i) {
+						if (!bullet_active[i]) {
+							bullet_active[i] = 1;
+							bullet_x[i] = player_x + 8; // Start just ahead of player
+							bullet_y[i] = player_y;
+							break;
+						}
+					}
+				}
+
+				for (i = 0; i < MAX_BULLETS; ++i) {
+					if (bullet_active[i]) {
+						bullet_x[i] += 2;
+
+						if (bullet_x[i] > BULLET_RIGHT_LIMIT) {
+							bullet_active[i] = 0;
+						} else {
+							oam_meta_spr(bullet_x[i], bullet_y[i], bullet_sprite);
+						}
+					}
+				}
+
+				// TEMP: transition to dialogue
+				if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
+					ppu_off();
+					clear_screen();
+					clear_all_bullets();
+					oam_clear();
+					shmup_screen_drawn = 0;
+					shmup_started = 0;
+					game_state = STATE_DIALOGUE;
+					ppu_on_all();
+				}
 			}
 		}
 		else if (game_state == STATE_DIALOGUE) {
@@ -221,4 +301,14 @@ void draw_crewmate_menu(void) {
 void clear_screen(void) {
 	vram_adr(NTADR_A(0, 0));
 	vram_fill(' ', 32 * 30);
+}
+
+void clear_line(unsigned char y) {
+	multi_vram_buffer_horz("                                ", 32, NTADR_A(0, y));
+}
+
+void clear_all_bullets(void) {
+	for (i = 0; i < MAX_BULLETS; ++i) {
+		bullet_active[i] = 0;
+	}
 }
