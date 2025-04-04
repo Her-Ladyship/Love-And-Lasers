@@ -18,13 +18,20 @@
 	.import		_pad_poll
 	.import		_vram_adr
 	.import		_vram_fill
-	.import		_vram_write
+	.import		_set_vram_buffer
+	.import		_one_vram_buffer
+	.import		_multi_vram_buffer_horz
 	.export		_palette
 	.export		_game_state
 	.export		_frame_count
 	.export		_selected_crewmate
+	.export		_pad1
+	.export		_pad1_old
 	.export		_display_press_start
 	.export		_display_press_A
+	.export		_update_arrow
+	.export		_clear_screen
+	.export		_draw_crewmate_menu
 	.export		_main
 
 .segment	"DATA"
@@ -55,18 +62,35 @@ _palette:
 	.byte	$00
 	.byte	$00
 	.byte	$00
+S0004:
+	.byte	$53,$45,$4C,$45,$43,$54,$20,$59,$4F,$55,$52,$20,$43,$52,$45,$57
+	.byte	$4D,$41,$54,$45,$00
 S0003:
 	.byte	$42,$52,$49,$45,$46,$49,$4E,$47,$20,$47,$4F,$45,$53,$20,$48,$45
 	.byte	$52,$45,$00
-S0004:
-	.byte	$53,$45,$4C,$45,$43,$54,$20,$59,$4F,$55,$52,$20,$43,$52,$45,$57
-	.byte	$00
-S0006:
+S0008:
+	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$00
+S0007:
 	.byte	$50,$52,$45,$53,$53,$20,$41,$20,$42,$55,$54,$54,$4F,$4E,$00
 S0002:
 	.byte	$4C,$4F,$56,$45,$20,$26,$20,$4C,$41,$53,$45,$52,$53,$00
+S0006	:=	S0008+3
 S0005:
 	.byte	$50,$52,$45,$53,$53,$20,$53,$54,$41,$52,$54,$00
+S000B:
+	.byte	$4D,$52,$20,$42,$55,$42,$42,$4C,$45,$53,$00
+S0009:
+	.byte	$5A,$41,$52,$4E,$45,$4C,$4C,$41,$00
+S000A:
+	.byte	$4C,$55,$4D,$41,$2D,$36,$00
+
+.segment	"BSS"
+
+.segment	"ZEROPAGE"
+_pad1:
+	.res	1,$00
+_pad1_old:
+	.res	1,$00
 
 ; ---------------------------------------------------------------
 ; void __near__ display_press_start (void)
@@ -79,7 +103,7 @@ S0005:
 .segment	"CODE"
 
 ;
-; frame_count++; 
+; frame_count++;
 ;
 	inc     _frame_count
 ;
@@ -87,34 +111,36 @@ S0005:
 ;
 	lda     _frame_count
 	and     #$20
-	bne     L0005
+	bne     L0002
 ;
-; vram_write("PRESS START", 11);
+; multi_vram_buffer_horz("PRESS START", 11, NTADR_A(11,15));
 ;
+	jsr     decsp3
 	lda     #<(S0005)
-	ldx     #>(S0005)
-	jsr     pushax
-	ldx     #$00
-	lda     #$0B
-	jsr     _vram_write
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0005)
 ;
 ; } else {
 ;
-	jmp     L0004
+	jmp     L000B
 ;
-; vram_fill(' ', 11);
+; multi_vram_buffer_horz("           ", 11, NTADR_A(11,15));
 ;
-L0005:	lda     #$20
-	jsr     pusha
-	ldx     #$00
+L0002:	jsr     decsp3
+	lda     #<(S0006)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0006)
+L000B:	sta     (sp),y
 	lda     #$0B
-	jsr     _vram_fill
-;
-; vram_adr(NTADR_A(0,0));
-;
-L0004:	ldx     #$20
-	lda     #$00
-	jmp     _vram_adr
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$21
+	lda     #$EB
+	jmp     _multi_vram_buffer_horz
 
 .endproc
 
@@ -129,7 +155,7 @@ L0004:	ldx     #$20
 .segment	"CODE"
 
 ;
-; frame_count++; 
+; frame_count++;
 ;
 	inc     _frame_count
 ;
@@ -137,34 +163,181 @@ L0004:	ldx     #$20
 ;
 	lda     _frame_count
 	and     #$20
-	bne     L0005
+	bne     L0002
 ;
-; vram_write("PRESS A BUTTON", 14);
+; multi_vram_buffer_horz("PRESS A BUTTON", 14, NTADR_A(9,15));
 ;
-	lda     #<(S0006)
-	ldx     #>(S0006)
-	jsr     pushax
-	ldx     #$00
-	lda     #$0E
-	jsr     _vram_write
+	jsr     decsp3
+	lda     #<(S0007)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0007)
 ;
 ; } else {
 ;
-	jmp     L0004
+	jmp     L000B
 ;
-; vram_fill(' ', 14);
+; multi_vram_buffer_horz("              ", 14, NTADR_A(9,15));
 ;
-L0005:	lda     #$20
-	jsr     pusha
-	ldx     #$00
+L0002:	jsr     decsp3
+	lda     #<(S0008)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0008)
+L000B:	sta     (sp),y
 	lda     #$0E
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$21
+	lda     #$E9
+	jmp     _multi_vram_buffer_horz
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ update_arrow (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_update_arrow: near
+
+.segment	"CODE"
+
+;
+; int arrow_addr = NTADR_A(8, 11 + selected_crewmate * 4);
+;
+	ldx     #$00
+	lda     _selected_crewmate
+	jsr     shlax2
+	clc
+	adc     #$0B
+	bcc     L0002
+	inx
+L0002:	jsr     aslax4
+	stx     tmp1
+	asl     a
+	rol     tmp1
+	ora     #$08
+	pha
+	lda     tmp1
+	ora     #$20
+	tax
+	pla
+	jsr     pushax
+;
+; one_vram_buffer('>', arrow_addr);
+;
+	lda     #$3E
+	jsr     pusha
+	ldy     #$02
+	lda     (sp),y
+	tax
+	dey
+	lda     (sp),y
+	jsr     _one_vram_buffer
+;
+; }
+;
+	jmp     incsp2
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ clear_screen (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_clear_screen: near
+
+.segment	"CODE"
+
+;
+; ppu_off();
+;
+	jsr     _ppu_off
+;
+; vram_adr(NTADR_A(0, 0));
+;
+	ldx     #$20
+	lda     #$00
+	jsr     _vram_adr
+;
+; vram_fill(' ', 32 * 30);
+;
+	lda     #$20
+	jsr     pusha
+	ldx     #$03
+	lda     #$C0
 	jsr     _vram_fill
 ;
-; vram_adr(NTADR_A(0,0));
+; ppu_on_all();
 ;
-L0004:	ldx     #$20
-	lda     #$00
-	jmp     _vram_adr
+	jmp     _ppu_on_all
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_crewmate_menu (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_crewmate_menu: near
+
+.segment	"CODE"
+
+;
+; multi_vram_buffer_horz("ZARNELLA", 8, NTADR_A(10, 11));
+;
+	jsr     decsp3
+	lda     #<(S0009)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0009)
+	sta     (sp),y
+	lda     #$08
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$21
+	lda     #$6A
+	jsr     _multi_vram_buffer_horz
+;
+; multi_vram_buffer_horz("LUMA-6", 6, NTADR_A(10, 15));
+;
+	jsr     decsp3
+	lda     #<(S000A)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S000A)
+	sta     (sp),y
+	lda     #$06
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$21
+	lda     #$EA
+	jsr     _multi_vram_buffer_horz
+;
+; multi_vram_buffer_horz("MR BUBBLES", 10, NTADR_A(10, 19));
+;
+	jsr     decsp3
+	lda     #<(S000B)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S000B)
+	sta     (sp),y
+	lda     #$0A
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$22
+	lda     #$6A
+	jmp     _multi_vram_buffer_horz
 
 .endproc
 
@@ -181,7 +354,6 @@ L0004:	ldx     #$20
 ;
 ; ppu_off();
 ;
-	jsr     decsp1
 	jsr     _ppu_off
 ;
 ; pal_bg(palette);
@@ -190,158 +362,147 @@ L0004:	ldx     #$20
 	ldx     #>(_palette)
 	jsr     _pal_bg
 ;
-; vram_adr(NTADR_A(10, 12));
+; set_vram_buffer();
 ;
+	jsr     _set_vram_buffer
+;
+; multi_vram_buffer_horz("LOVE & LASERS", 13, NTADR_A(10,12));
+;
+	jsr     decsp3
+	lda     #<(S0002)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0002)
+	sta     (sp),y
+	lda     #$0D
+	ldy     #$00
+	sta     (sp),y
 	ldx     #$21
 	lda     #$8A
-	jsr     _vram_adr
-;
-; vram_write("LOVE & LASERS", 13);
-;
-	lda     #<(S0002)
-	ldx     #>(S0002)
-	jsr     pushax
-	ldx     #$00
-	lda     #$0D
-	jsr     _vram_write
+	jsr     _multi_vram_buffer_horz
 ;
 ; ppu_on_all();
 ;
-L000C:	jsr     _ppu_on_all
+	jsr     _ppu_on_all
 ;
 ; ppu_wait_nmi();
 ;
 L0002:	jsr     _ppu_wait_nmi
 ;
+; pad1_old = pad1;
+;
+	lda     _pad1
+	sta     _pad1_old
+;
 ; pad1 = pad_poll(0);
 ;
 	lda     #$00
 	jsr     _pad_poll
-	ldy     #$00
-	sta     (sp),y
+	sta     _pad1
 ;
 ; if (game_state == STATE_TITLE) {
 ;
 	lda     _game_state
-	bne     L000D
-;
-; vram_adr(NTADR_A(11,15));
-;
-	ldx     #$21
-	lda     #$EB
-	jsr     _vram_adr
+	bne     L0021
 ;
 ; display_press_start();
 ;
 	jsr     _display_press_start
 ;
-; if (pad1 & PAD_START) {
+; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 ;
-	ldy     #$00
-	lda     (sp),y
+	lda     _pad1
 	and     #$10
 	beq     L0002
+	lda     _pad1_old
+	and     #$10
+	bne     L0002
 ;
 ; ppu_off();
 ;
 	jsr     _ppu_off
 ;
-; vram_adr(NTADR_A(0, 0));
+; clear_screen();
 ;
-	ldx     #$20
-	lda     #$00
-	jsr     _vram_adr
+	jsr     _clear_screen
 ;
-; vram_fill(0, 32*30);
+; multi_vram_buffer_horz("BRIEFING GOES HERE", 18, NTADR_A(7,12));
 ;
-	lda     #$00
-	jsr     pusha
-	ldx     #$03
-	lda     #$C0
-	jsr     _vram_fill
-;
-; vram_adr(NTADR_A(7, 12));
-;
+	jsr     decsp3
+	lda     #<(S0003)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0003)
+	sta     (sp),y
+	lda     #$12
+	ldy     #$00
+	sta     (sp),y
 	ldx     #$21
 	lda     #$87
-	jsr     _vram_adr
+	jsr     _multi_vram_buffer_horz
 ;
-; vram_write("BRIEFING GOES HERE", 18);
+; ppu_on_all();
 ;
-	lda     #<(S0003)
-	ldx     #>(S0003)
-	jsr     pushax
-	ldx     #$00
-	lda     #$12
-	jsr     _vram_write
+	jsr     _ppu_on_all
 ;
 ; game_state = STATE_BRIEFING;
 ;
 	lda     #$01
 	sta     _game_state
 ;
-; vram_adr(NTADR_A(0, 0));
-;
-	ldx     #$20
-	lda     #$00
-	jsr     _vram_adr
-;
 ; else if (game_state == STATE_BRIEFING) {
 ;
-	jmp     L000C
-L000D:	lda     _game_state
+	jmp     L0002
+L0021:	lda     _game_state
 	cmp     #$01
-	bne     L000E
+	bne     L0025
 ;
-; vram_adr(NTADR_A(9,15));
-;
-	ldx     #$21
-	lda     #$E9
-	jsr     _vram_adr
-;
-; display_press_A();  
+; display_press_A();
 ;
 	jsr     _display_press_A
 ;
-; if (pad1 & PAD_A) {
+; if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
 ;
-	ldy     #$00
-	lda     (sp),y
+	lda     _pad1
 	and     #$80
 	beq     L0002
+	lda     _pad1_old
+	and     #$80
+	bne     L0002
 ;
 ; ppu_off();
 ;
 	jsr     _ppu_off
 ;
-; vram_adr(NTADR_A(0, 0));
+; clear_screen();
 ;
-	ldx     #$20
-	lda     #$00
-	jsr     _vram_adr
+	jsr     _clear_screen
 ;
-; vram_fill(0, 32*30);
+; multi_vram_buffer_horz("SELECT YOUR CREWMATE", 20, NTADR_A(6,4));
 ;
-	lda     #$00
-	jsr     pusha
-	ldx     #$03
-	lda     #$C0
-	jsr     _vram_fill
-;
-; vram_adr(NTADR_A(8, 12));
-;
-	ldx     #$21
-	lda     #$88
-	jsr     _vram_adr
-;
-; vram_write("SELECT YOUR CREW", 16);
-;
+	jsr     decsp3
 	lda     #<(S0004)
-	ldx     #>(S0004)
-	jsr     pushax
-	ldx     #$00
-	lda     #$10
-	jsr     _vram_write
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0004)
+	sta     (sp),y
+	lda     #$14
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$86
+	jsr     _multi_vram_buffer_horz
+;
+; draw_crewmate_menu();
+;
+	jsr     _draw_crewmate_menu
+;
+; ppu_on_all();
+;
+	jsr     _ppu_on_all
 ;
 ; game_state = STATE_SELECT_CREWMATE;
 ;
@@ -350,10 +511,89 @@ L000D:	lda     _game_state
 ;
 ; else if (game_state == STATE_SELECT_CREWMATE) {
 ;
-	jmp     L000C
-L000E:	lda     _game_state
+	jmp     L0002
+L0025:	lda     _game_state
 	cmp     #$02
 	jne     L0002
+;
+; unsigned char old_crewmate = selected_crewmate;
+;
+	lda     _selected_crewmate
+	jsr     pusha
+;
+; if ((pad1 & PAD_DOWN) && !(pad1_old & PAD_DOWN)) {
+;
+	lda     _pad1
+	and     #$04
+	beq     L0029
+	lda     _pad1_old
+	and     #$04
+	bne     L0029
+;
+; selected_crewmate++;
+;
+	inc     _selected_crewmate
+;
+; if (selected_crewmate > 2) selected_crewmate = 0;
+;
+	lda     _selected_crewmate
+	cmp     #$03
+	bcc     L0029
+	lda     #$00
+	sta     _selected_crewmate
+;
+; if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
+;
+L0029:	lda     _pad1
+	and     #$08
+	beq     L002E
+	lda     _pad1_old
+	and     #$08
+	bne     L002E
+;
+; if (selected_crewmate == 0) selected_crewmate = 2;
+;
+	lda     _selected_crewmate
+	bne     L002D
+	lda     #$02
+	sta     _selected_crewmate
+;
+; else selected_crewmate--;
+;
+	jmp     L002E
+L002D:	dec     _selected_crewmate
+;
+; one_vram_buffer(' ', NTADR_A(8, 11 + old_crewmate * 4));
+;
+L002E:	lda     #$20
+	jsr     pusha
+	ldy     #$01
+	ldx     #$00
+	lda     (sp),y
+	jsr     shlax2
+	clc
+	adc     #$0B
+	bcc     L001D
+	inx
+L001D:	jsr     aslax4
+	stx     tmp1
+	asl     a
+	rol     tmp1
+	ora     #$08
+	pha
+	lda     tmp1
+	ora     #$20
+	tax
+	pla
+	jsr     _one_vram_buffer
+;
+; update_arrow();
+;
+	jsr     _update_arrow
+;
+; }
+;
+	jsr     incsp1
 ;
 ; while (1){
 ;

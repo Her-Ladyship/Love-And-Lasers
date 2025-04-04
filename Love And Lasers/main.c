@@ -1,11 +1,10 @@
-#include "LIB/neslib.h"
-#include "LIB/nesdoug.h" 
+#include "lib/neslib.h"
+#include "lib/nesdoug.h"
 
 #define BLACK 0x0f
 #define DK_GY 0x00
 #define LT_GY 0x10
 #define WHITE 0x30
-// black must be 0x0f, white must be 0x30
 #define PRESS_A_LEN 14
 
 #pragma bss-name(push, "ZEROPAGE")
@@ -15,7 +14,7 @@ const unsigned char palette[] = {
 	0,0,0,0,
 	0,0,0,0,
 	0,0,0,0
-}; 
+};
 
 enum GameState {
   STATE_TITLE,
@@ -28,81 +27,106 @@ enum GameState {
 
 unsigned char game_state = STATE_TITLE;
 unsigned char frame_count = 0;
-unsigned char selected_crewmate = 0;  // 0 = Zarnella, 1 = Luma-6, 2 = Mr Bubbles
+unsigned char selected_crewmate = 0;
+
+unsigned char pad1, pad1_old;
 
 void display_press_start(void);
 void display_press_A(void);
+void update_arrow(void);
+void clear_screen(void);
+void draw_crewmate_menu(void);
 
 void main(void) {
-	unsigned char pad1;
-
 	ppu_off();
 	pal_bg(palette);
-	vram_adr(NTADR_A(10, 12));
-	vram_write("LOVE & LASERS", 13);
+	set_vram_buffer();
+	multi_vram_buffer_horz("LOVE & LASERS", 13, NTADR_A(10,12));
 	ppu_on_all();
 
 	while (1){
 		ppu_wait_nmi();
+		pad1_old = pad1;
 		pad1 = pad_poll(0);
 
 		if (game_state == STATE_TITLE) {
-			vram_adr(NTADR_A(11,15));
 			display_press_start();
 
-			if (pad1 & PAD_START) {
+			if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 				ppu_off();
-				vram_adr(NTADR_A(0, 0));
-				vram_fill(0, 32*30);
-
-				vram_adr(NTADR_A(7, 12));
-				vram_write("BRIEFING GOES HERE", 18);
+				clear_screen();
+				multi_vram_buffer_horz("BRIEFING GOES HERE", 18, NTADR_A(7,12));
+				ppu_on_all();
 
 				game_state = STATE_BRIEFING;
-				vram_adr(NTADR_A(0, 0));
-
-				ppu_on_all();
 			}
 		}
 		else if (game_state == STATE_BRIEFING) {
-			vram_adr(NTADR_A(9,15));
-			display_press_A();		
+			display_press_A();
 
-			if (pad1 & PAD_A) {
+			if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
 				ppu_off();
-				vram_adr(NTADR_A(0, 0));
-				vram_fill(0, 32*30);
-
-				vram_adr(NTADR_A(8, 12));
-				vram_write("SELECT YOUR CREW", 16);
+				clear_screen();
+				multi_vram_buffer_horz("SELECT YOUR CREWMATE", 20, NTADR_A(6,4));
+				draw_crewmate_menu();
+				ppu_on_all();
 
 				game_state = STATE_SELECT_CREWMATE;
-				ppu_on_all();
 			}
 		}
 		else if (game_state == STATE_SELECT_CREWMATE) {
+			unsigned char old_crewmate = selected_crewmate;
 
+				// Move selection down
+				if ((pad1 & PAD_DOWN) && !(pad1_old & PAD_DOWN)) {
+					selected_crewmate++;
+					if (selected_crewmate > 2) selected_crewmate = 0;
+				}
+
+				// Move selection up
+				if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
+					if (selected_crewmate == 0) selected_crewmate = 2;
+					else selected_crewmate--;
+				}
+
+			one_vram_buffer(' ', NTADR_A(8, 11 + old_crewmate * 4));
+			update_arrow();
 		}
 	}
 }
 
 void display_press_start(void) {
-	frame_count++;	
+	frame_count++;
 	if ((frame_count & 0x20) == 0) {
-		vram_write("PRESS START", 11);
+		multi_vram_buffer_horz("PRESS START", 11, NTADR_A(11,15));
 	} else {
-		vram_fill(' ', 11);
+		multi_vram_buffer_horz("           ", 11, NTADR_A(11,15));
 	}
-	vram_adr(NTADR_A(0,0));
 }
 
 void display_press_A(void) {
-	frame_count++;	
+	frame_count++;
 	if ((frame_count & 0x20) == 0) {
-		vram_write("PRESS A BUTTON", 14);
+		multi_vram_buffer_horz("PRESS A BUTTON", 14, NTADR_A(9,15));
 	} else {
-		vram_fill(' ', 14);
+		multi_vram_buffer_horz("              ", 14, NTADR_A(9,15));
 	}
-	vram_adr(NTADR_A(0,0));
 }
 
+void update_arrow(void) {
+	int arrow_addr = NTADR_A(8, 11 + selected_crewmate * 4);
+	one_vram_buffer('>', arrow_addr);
+}
+
+void draw_crewmate_menu(void) {
+	multi_vram_buffer_horz("ZARNELLA", 8, NTADR_A(10, 11));
+	multi_vram_buffer_horz("LUMA-6", 6, NTADR_A(10, 15));
+	multi_vram_buffer_horz("MR BUBBLES", 10, NTADR_A(10, 19));
+}
+
+void clear_screen(void) {
+	ppu_off();
+	vram_adr(NTADR_A(0, 0));
+	vram_fill(' ', 32 * 30);
+	ppu_on_all();
+}
