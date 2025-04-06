@@ -28,15 +28,19 @@
 	.import		_check_collision
 	.export		_palette
 	.export		_game_state
-	.export		_frame_count
+	.export		_i
+	.export		_j
+	.export		_hp_string
 	.export		_selected_crewmate
 	.export		_shmup_screen_drawn
 	.export		_shmup_started
 	.export		_dialogue_shown
 	.export		_ending_shown
-	.export		_i
-	.export		_j
-	.export		_hp_string
+	.export		_ability_ready
+	.export		_frame_count
+	.export		_ability_cooldown_timer
+	.export		_player_invincible
+	.export		_invincibility_timer
 	.export		_pad1
 	.export		_pad1_old
 	.export		_player_x
@@ -50,9 +54,12 @@
 	.export		_enemy_active
 	.export		_bullet_box
 	.export		_enemy_box
+	.export		_bullets
+	.export		_special_bullets
 	.export		_player_sprite
 	.export		_bullet_sprite
 	.export		_enemy_sprite
+	.export		_special_bullet_sprite
 	.export		_update_arrow
 	.export		_clear_screen
 	.export		_draw_crewmate_menu
@@ -67,19 +74,30 @@
 	.export		_crewmate_confirm_text
 	.export		_handle_selection_arrow
 	.export		_spawn_bullets
-	.export		_update_bullets
+	.export		_update_regular_bullets
+	.export		_update_special_bullets
 	.export		_draw_player
 	.export		_enemy_killed_check
 	.export		_check_player_hit
 	.export		_draw_hud
+	.export		_fire_zarnella_spread
+	.export		_update_ability_cooldown
+	.export		_start_ability_cooldown
+	.export		_get_current_cooldown_max
+	.export		_draw_ability_cooldown_bar
+	.export		_reset_companion_ability_state
 	.export		_main
 
 .segment	"DATA"
 
 _game_state:
 	.byte	$00
-_frame_count:
+_i:
 	.byte	$00
+_j:
+	.byte	$00
+_hp_string:
+	.byte	$48,$50,$3A,$20,$33,$00
 _selected_crewmate:
 	.byte	$00
 _shmup_screen_drawn:
@@ -90,12 +108,16 @@ _dialogue_shown:
 	.byte	$00
 _ending_shown:
 	.byte	$00
-_i:
+_ability_ready:
+	.byte	$01
+_frame_count:
 	.byte	$00
-_j:
+_ability_cooldown_timer:
+	.word	$0000
+_player_invincible:
 	.byte	$00
-_hp_string:
-	.byte	$48,$50,$3A,$20,$33,$00
+_invincibility_timer:
+	.byte	$00
 _player_x:
 	.byte	$20
 _player_y:
@@ -114,10 +136,10 @@ _palette:
 	.byte	$17
 	.byte	$27
 	.byte	$37
-	.byte	$00
-	.byte	$00
-	.byte	$00
-	.byte	$00
+	.byte	$0F
+	.byte	$11
+	.byte	$21
+	.byte	$31
 	.byte	$00
 	.byte	$00
 	.byte	$00
@@ -138,6 +160,12 @@ _enemy_sprite:
 	.byte	$00
 	.byte	$00
 	.byte	$43
+	.byte	$00
+	.byte	$80
+_special_bullet_sprite:
+	.byte	$00
+	.byte	$00
+	.byte	$66
 	.byte	$00
 	.byte	$80
 S0021:
@@ -246,6 +274,10 @@ _bullet_box:
 	.res	4,$00
 _enemy_box:
 	.res	4,$00
+_bullets:
+	.res	15,$00
+_special_bullets:
+	.res	25,$00
 
 ; ---------------------------------------------------------------
 ; void __near__ update_arrow (void)
@@ -558,20 +590,29 @@ L0006:	jmp     incsp5
 ;
 	lda     #$00
 	sta     _i
-L0007:	lda     _i
+L0006:	lda     _i
 	cmp     #$03
 	bcs     L0003
 ;
-; bullet_active[i] = 0;
+; bullets[i].active = 0;
 ;
-	ldy     _i
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
 	lda     #$00
-	sta     _bullet_active,y
+	ldy     #$04
+	sta     (ptr1),y
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
 	inc     _i
-	jmp     L0007
+	jmp     L0006
 ;
 ; }
 ;
@@ -1184,52 +1225,113 @@ L0014:	dec     _selected_crewmate
 ;
 	lda     _pad1
 	and     #$80
-	beq     L0011
+	beq     L000D
 	lda     _pad1_old
 	and     #$80
-	beq     L0015
-L0011:	rts
+	beq     L0010
+L000D:	rts
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L0015:	sta     _i
-L0013:	lda     _i
+L0010:	sta     _i
+L000F:	lda     _i
 	cmp     #$03
-	bcs     L0007
+	bcc     L0011
 ;
-; if (!bullet_active[i]) {
+; }
 ;
-	ldy     _i
-	lda     _bullet_active,y
-	bne     L0014
+	rts
 ;
-; bullet_active[i] = 1;
+; if (!bullets[i].active) {
 ;
-	ldy     _i
-	lda     #$01
-	sta     _bullet_active,y
-;
-; bullet_x[i] = player_x + 8;
-;
-	lda     #<(_bullet_x)
-	ldx     #>(_bullet_x)
+L0011:	ldx     #$00
+	lda     _i
+	jsr     mulax5
 	clc
-	adc     _i
-	bcc     L000D
-	inx
-L000D:	sta     ptr1
-	stx     ptr1+1
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	bne     L0008
+;
+; bullets[i].active = 1;
+;
+	tax
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     #$01
+	sta     (ptr1),y
+;
+; bullets[i].x = player_x + 8;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
 	lda     _player_x
 	clc
 	adc     #$08
 	ldy     #$00
 	sta     (ptr1),y
 ;
-; bullet_y[i] = player_y;
+; bullets[i].y = player_y;
 ;
-	ldy     _i
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
 	lda     _player_y
-	sta     _bullet_y,y
+	iny
+	sta     (ptr1),y
+;
+; bullets[i].dx = 2;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     #$02
+	iny
+	sta     (ptr1),y
+;
+; bullets[i].dy = 0;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     #$00
+	iny
+	sta     (ptr1),y
 ;
 ; break;
 ;
@@ -1237,22 +1339,18 @@ L000D:	sta     ptr1
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L0014:	inc     _i
-	jmp     L0013
-;
-; }
-;
-L0007:	rts
+L0008:	inc     _i
+	jmp     L000F
 
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ update_bullets (void)
+; void __near__ update_regular_bullets (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_update_bullets: near
+.proc	_update_regular_bullets: near
 
 .segment	"CODE"
 
@@ -1261,59 +1359,174 @@ L0007:	rts
 ;
 	lda     #$00
 	sta     _i
-L000F:	lda     _i
+L000D:	lda     _i
 	cmp     #$03
-	bcs     L0003
+	bcc     L0010
 ;
-; if (bullet_active[i]) {
+; }
 ;
-	ldy     _i
-	lda     _bullet_active,y
-	beq     L0010
+	rts
 ;
-; bullet_x[i] += 2;
+; if (bullets[i].active) {
 ;
-	lda     #<(_bullet_x)
-	ldx     #>(_bullet_x)
+L0010:	ldx     #$00
+	lda     _i
+	jsr     mulax5
 	clc
-	adc     _i
-	bcc     L0008
-	inx
-L0008:	sta     ptr1
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jeq     L000F
+;
+; bullets[i].x += bullets[i].dx;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	tay
+	txa
+	adc     #>(_bullets)
+	tax
+	tya
+	sta     ptr2
+	stx     ptr2+1
+	sta     ptr1
 	stx     ptr1+1
 	ldy     #$00
 	lda     (ptr1),y
+	sta     sreg
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
 	clc
-	adc     #$02
-	sta     (ptr1),y
+	adc     #<(_bullets)
+	tay
+	txa
+	adc     #>(_bullets)
+	tax
+	tya
+	ldy     #$02
+	jsr     ldaidx
+	clc
+	adc     sreg
+	ldy     #$00
+	sta     (ptr2),y
 ;
-; if (bullet_x[i] > BULLET_RIGHT_LIMIT) {
+; bullets[i].y += bullets[i].dy;
 ;
-	ldy     _i
-	lda     _bullet_x,y
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	tay
+	txa
+	adc     #>(_bullets)
+	tax
+	tya
+	sta     ptr2
+	stx     ptr2+1
+	sta     ptr1
+	stx     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	sta     sreg
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	tay
+	txa
+	adc     #>(_bullets)
+	tax
+	tya
+	ldy     #$03
+	jsr     ldaidx
+	clc
+	adc     sreg
+	ldy     #$01
+	sta     (ptr2),y
+;
+; if (bullets[i].x > BULLET_RIGHT_LIMIT || bullets[i].y > 240) {
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #<(_bullets)
+	lda     (ptr1),y
 	cmp     #$FD
-	bcc     L0009
+	bcs     L000E
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	cmp     #$F1
+	bcc     L0007
 ;
-; bullet_active[i] = 0;
+; bullets[i].active = 0;
 ;
-	ldy     _i
+L000E:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
 	lda     #$00
-	sta     _bullet_active,y
+	ldy     #$04
+	sta     (ptr1),y
 ;
 ; } else {
 ;
-	jmp     L0010
+	jmp     L000F
 ;
-; oam_meta_spr(bullet_x[i], bullet_y[i], bullet_sprite);
+; oam_meta_spr(bullets[i].x, bullets[i].y, bullet_sprite);
 ;
-L0009:	jsr     decsp2
-	ldy     _i
-	lda     _bullet_x,y
+L0007:	jsr     decsp2
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #<(_bullets)
+	lda     (ptr1),y
 	ldy     #$01
 	sta     (sp),y
-	ldy     _i
-	lda     _bullet_y,y
-	ldy     #$00
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     (ptr1),y
+	dey
 	sta     (sp),y
 	lda     #<(_bullet_sprite)
 	ldx     #>(_bullet_sprite)
@@ -1321,12 +1534,203 @@ L0009:	jsr     decsp2
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L0010:	inc     _i
-	jmp     L000F
+L000F:	inc     _i
+	jmp     L000D
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ update_special_bullets (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_update_special_bullets: near
+
+.segment	"CODE"
+
+;
+; for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+;
+	lda     #$00
+	sta     _i
+L000D:	lda     _i
+	cmp     #$05
+	bcc     L0010
 ;
 ; }
 ;
-L0003:	rts
+	rts
+;
+; if (special_bullets[i].active) {
+;
+L0010:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jeq     L000F
+;
+; special_bullets[i].x += special_bullets[i].dx;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	sta     ptr2
+	stx     ptr2+1
+	sta     ptr1
+	stx     ptr1+1
+	ldy     #$00
+	lda     (ptr1),y
+	sta     sreg
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	ldy     #$02
+	jsr     ldaidx
+	clc
+	adc     sreg
+	ldy     #$00
+	sta     (ptr2),y
+;
+; special_bullets[i].y += special_bullets[i].dy;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	sta     ptr2
+	stx     ptr2+1
+	sta     ptr1
+	stx     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	sta     sreg
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	ldy     #$03
+	jsr     ldaidx
+	clc
+	adc     sreg
+	ldy     #$01
+	sta     (ptr2),y
+;
+; if (special_bullets[i].x > BULLET_RIGHT_LIMIT || special_bullets[i].y > 240) {
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #<(_special_bullets)
+	lda     (ptr1),y
+	cmp     #$FD
+	bcs     L000E
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	cmp     #$F1
+	bcc     L0007
+;
+; special_bullets[i].active = 0;
+;
+L000E:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     #$00
+	ldy     #$04
+	sta     (ptr1),y
+;
+; } else {
+;
+	jmp     L000F
+;
+; oam_meta_spr(special_bullets[i].x, special_bullets[i].y, special_bullet_sprite);
+;
+L0007:	jsr     decsp2
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #<(_special_bullets)
+	lda     (ptr1),y
+	ldy     #$01
+	sta     (sp),y
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     (ptr1),y
+	dey
+	sta     (sp),y
+	lda     #<(_special_bullet_sprite)
+	ldx     #>(_special_bullet_sprite)
+	jsr     _oam_meta_spr
+;
+; for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+;
+L000F:	inc     _i
+	jmp     L000D
 
 .endproc
 
@@ -1341,11 +1745,52 @@ L0003:	rts
 .segment	"CODE"
 
 ;
+; const unsigned char* sprite = player_sprite;
+;
+	lda     #<(_player_sprite)
+	ldx     #>(_player_sprite)
+	jsr     pushax
+;
 ; oam_clear();
 ;
 	jsr     _oam_clear
 ;
-; oam_meta_spr(player_x, player_y, player_sprite);
+; for (i = 0; i < 5; ++i) {
+;
+	lda     #$00
+	sta     _i
+L000A:	lda     _i
+	cmp     #$05
+	bcs     L0003
+;
+; temp_sprite[i] = player_sprite[i];
+;
+	lda     #<(M0001)
+	ldx     #>(M0001)
+	clc
+	adc     _i
+	bcc     L0006
+	inx
+L0006:	sta     ptr1
+	stx     ptr1+1
+	ldy     _i
+	lda     _player_sprite,y
+	ldy     #$00
+	sta     (ptr1),y
+;
+; for (i = 0; i < 5; ++i) {
+;
+	inc     _i
+	jmp     L000A
+;
+; temp_sprite[3] = player_invincible ? 1 : 0;
+;
+L0003:	lda     _player_invincible
+	beq     L000C
+	lda     #$01
+L000C:	sta     M0001+3
+;
+; oam_meta_spr(player_x, player_y, temp_sprite);
 ;
 	jsr     decsp2
 	lda     _player_x
@@ -1354,9 +1799,18 @@ L0003:	rts
 	lda     _player_y
 	dey
 	sta     (sp),y
-	lda     #<(_player_sprite)
-	ldx     #>(_player_sprite)
-	jmp     _oam_meta_spr
+	lda     #<(M0001)
+	ldx     #>(M0001)
+	jsr     _oam_meta_spr
+;
+; }
+;
+	jmp     incsp2
+
+.segment	"ZEROPAGE"
+
+M0001:
+	.res	5,$00
 
 .endproc
 
@@ -1375,30 +1829,52 @@ L0003:	rts
 ;
 	lda     #$00
 	sta     _i
-L0015:	lda     _i
+L0020:	lda     _i
 	cmp     #$03
-	bcc     L0019
+	jcs     L0024
 ;
-; }
+; if (bullets[i].active) {
 ;
-	rts
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jeq     L0023
 ;
-; if (bullet_active[i]) {
+; bullet_box.x = bullets[i].x;
 ;
-L0019:	ldy     _i
-	lda     _bullet_active,y
-	beq     L0018
-;
-; bullet_box.x = bullet_x[i];
-;
-	ldy     _i
-	lda     _bullet_x,y
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #<(_bullets)
+	lda     (ptr1),y
 	sta     _bullet_box
 ;
-; bullet_box.y = bullet_y[i];
+; bullet_box.y = bullets[i].y;
 ;
-	ldy     _i
-	lda     _bullet_y,y
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
 	sta     _bullet_box+1
 ;
 ; bullet_box.width = 8;
@@ -1414,15 +1890,15 @@ L0019:	ldy     _i
 ;
 	lda     #$00
 	sta     _j
-L0016:	lda     _j
+L0021:	lda     _j
 	cmp     #$06
-	bcs     L0018
+	bcs     L0023
 ;
 ; if (enemy_active[j]) {
 ;
 	ldy     _j
 	lda     _enemy_active,y
-	beq     L0017
+	beq     L0022
 ;
 ; enemy_box.x = enemy_x[j];
 ;
@@ -1454,32 +1930,186 @@ L0016:	lda     _j
 	ldx     #>(_enemy_box)
 	jsr     _check_collision
 	tax
-	beq     L0017
+	beq     L0022
 ;
-; bullet_active[i] = 0;
+; bullets[i].active = 0;
 ;
-	ldy     _i
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
 	lda     #$00
-	sta     _bullet_active,y
+	ldy     #$04
+	sta     (ptr1),y
 ;
 ; enemy_active[j] = 0;
 ;
 	ldy     _j
 	sta     _enemy_active,y
 ;
-; break; // Stop checking this bullet
+; break;
 ;
-	jmp     L0018
+	jmp     L0023
 ;
 ; for (j = 0; j < MAX_ENEMIES; ++j) {
 ;
-L0017:	inc     _j
-	jmp     L0016
+L0022:	inc     _j
+	jmp     L0021
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L0018:	inc     _i
-	jmp     L0015
+L0023:	inc     _i
+	jmp     L0020
+;
+; for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+;
+L0024:	lda     #$00
+	sta     _i
+L0025:	lda     _i
+	cmp     #$05
+	bcc     L0029
+;
+; }
+;
+	rts
+;
+; if (special_bullets[i].active) {
+;
+L0029:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jeq     L0028
+;
+; bullet_box.x = special_bullets[i].x;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #<(_special_bullets)
+	lda     (ptr1),y
+	sta     _bullet_box
+;
+; bullet_box.y = special_bullets[i].y;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	sta     _bullet_box+1
+;
+; bullet_box.width = 8;
+;
+	lda     #$08
+	sta     _bullet_box+2
+;
+; bullet_box.height = 8;
+;
+	sta     _bullet_box+3
+;
+; for (j = 0; j < MAX_ENEMIES; ++j) {
+;
+	lda     #$00
+	sta     _j
+L0026:	lda     _j
+	cmp     #$06
+	bcs     L0028
+;
+; if (enemy_active[j]) {
+;
+	ldy     _j
+	lda     _enemy_active,y
+	beq     L0027
+;
+; enemy_box.x = enemy_x[j];
+;
+	ldy     _j
+	lda     _enemy_x,y
+	sta     _enemy_box
+;
+; enemy_box.y = enemy_y[j];
+;
+	ldy     _j
+	lda     _enemy_y,y
+	sta     _enemy_box+1
+;
+; enemy_box.width = 8;
+;
+	lda     #$08
+	sta     _enemy_box+2
+;
+; enemy_box.height = 8;
+;
+	sta     _enemy_box+3
+;
+; if (check_collision(&bullet_box, &enemy_box)) {
+;
+	lda     #<(_bullet_box)
+	ldx     #>(_bullet_box)
+	jsr     pushax
+	lda     #<(_enemy_box)
+	ldx     #>(_enemy_box)
+	jsr     _check_collision
+	tax
+	beq     L0027
+;
+; special_bullets[i].active = 0;
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     #$00
+	ldy     #$04
+	sta     (ptr1),y
+;
+; enemy_active[j] = 0;
+;
+	ldy     _j
+	sta     _enemy_active,y
+;
+; break;
+;
+	jmp     L0028
+;
+; for (j = 0; j < MAX_ENEMIES; ++j) {
+;
+L0027:	inc     _j
+	jmp     L0026
+;
+; for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+;
+L0028:	inc     _i
+	jmp     L0025
 
 .endproc
 
@@ -1522,7 +2152,7 @@ L0018:	inc     _i
 ;
 	lda     #$00
 	sta     _i
-L000E:	lda     _i
+L000F:	lda     _i
 	cmp     #$06
 	bcs     L0003
 ;
@@ -1530,7 +2160,7 @@ L000E:	lda     _i
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	beq     L0010
+	beq     L0011
 ;
 ; enemy_box.x = enemy_x[i];
 ;
@@ -1562,7 +2192,7 @@ L000E:	lda     _i
 	ldx     #>(_enemy_box)
 	jsr     _check_collision
 	tax
-	beq     L0010
+	beq     L0011
 ;
 ; enemy_active[i] = 0; // enemy dies on impact
 ;
@@ -1570,15 +2200,23 @@ L000E:	lda     _i
 	lda     #$00
 	sta     _enemy_active,y
 ;
-; if (player_health > 0) player_health--;
+; if (!player_invincible) {
+;
+	lda     _player_invincible
+	bne     L0010
+;
+; if (player_health > 0) {
 ;
 	lda     _player_health
-	beq     L000F
+	beq     L0010
+;
+; player_health--;
+;
 	dec     _player_health
 ;
 ; if (player_health == 0) {
 ;
-L000F:	lda     _player_health
+L0010:	lda     _player_health
 	bne     L0003
 ;
 ; ppu_off();
@@ -1616,8 +2254,8 @@ L000F:	lda     _player_health
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0010:	inc     _i
-	jmp     L000E
+L0011:	inc     _i
+	jmp     L000F
 ;
 ; }
 ;
@@ -1662,6 +2300,503 @@ L0003:	jmp     incsp4
 .endproc
 
 ; ---------------------------------------------------------------
+; void __near__ fire_zarnella_spread (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_fire_zarnella_spread: near
+
+.segment	"CODE"
+
+;
+; const signed char spread_dx[5] = {1, 2, 2, 2, 1};
+;
+	jsr     decsp5
+	ldy     #$04
+L0002:	lda     M0001,y
+	sta     (sp),y
+	dey
+	bpl     L0002
+;
+; const signed char spread_dy[5] = {-1, -1, 0, 1, 1};
+;
+	jsr     decsp5
+	ldy     #$04
+L0003:	lda     M0002,y
+	sta     (sp),y
+	dey
+	bpl     L0003
+;
+; for (i = 0; i < 5; i++) {
+;
+	lda     #$00
+	sta     _i
+L0014:	lda     _i
+	cmp     #$05
+	jcs     L0005
+;
+; for (j = 0; j < MAX_SPECIAL_BULLETS; j++) {
+;
+	lda     #$00
+	sta     _j
+L0015:	lda     _j
+	cmp     #$05
+	jcs     L0016
+;
+; if (!special_bullets[j].active) {
+;
+	ldx     #$00
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jne     L000A
+;
+; special_bullets[j].active = 1;
+;
+	tax
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     #$01
+	sta     (ptr1),y
+;
+; special_bullets[j].x = player_x + 8;
+;
+	ldx     #$00
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     _player_x
+	clc
+	adc     #$08
+	ldy     #$00
+	sta     (ptr1),y
+;
+; special_bullets[j].y = player_y;
+;
+	ldx     #$00
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_special_bullets)
+	sta     ptr1+1
+	lda     _player_y
+	iny
+	sta     (ptr1),y
+;
+; special_bullets[j].dx = spread_dx[i];
+;
+	ldx     #$00
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	jsr     pushax
+	lda     sp
+	ldx     sp+1
+	clc
+	adc     #$07
+	bcc     L0012
+	inx
+	clc
+L0012:	adc     _i
+	bcc     L000F
+	inx
+L000F:	ldy     #$00
+	jsr     ldaidx
+	ldy     #$02
+	jsr     staspidx
+;
+; special_bullets[j].dy = spread_dy[i];
+;
+	ldx     #$00
+	lda     _j
+	jsr     mulax5
+	clc
+	adc     #<(_special_bullets)
+	tay
+	txa
+	adc     #>(_special_bullets)
+	tax
+	tya
+	jsr     pushax
+	lda     sp
+	ldx     sp+1
+	clc
+	adc     #$02
+	bcc     L0013
+	inx
+	clc
+L0013:	adc     _i
+	bcc     L0011
+	inx
+L0011:	ldy     #$00
+	jsr     ldaidx
+	ldy     #$03
+	jsr     staspidx
+;
+; break;
+;
+	jmp     L0016
+;
+; for (j = 0; j < MAX_SPECIAL_BULLETS; j++) {
+;
+L000A:	inc     _j
+	jmp     L0015
+;
+; for (i = 0; i < 5; i++) {
+;
+L0016:	inc     _i
+	jmp     L0014
+;
+; }
+;
+L0005:	ldy     #$0A
+	jmp     addysp
+
+.segment	"RODATA"
+
+M0001:
+	.byte	$01
+	.byte	$02
+	.byte	$02
+	.byte	$02
+	.byte	$01
+M0002:
+	.byte	$FF
+	.byte	$FF
+	.byte	$00
+	.byte	$01
+	.byte	$01
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ update_ability_cooldown (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_update_ability_cooldown: near
+
+.segment	"CODE"
+
+;
+; if (!ability_ready && !player_invincible) {
+;
+	lda     _ability_ready
+	bne     L0003
+	lda     _player_invincible
+	beq     L0004
+L0003:	rts
+;
+; if (ability_cooldown_timer > 0) {
+;
+L0004:	lda     _ability_cooldown_timer
+	ora     _ability_cooldown_timer+1
+	beq     L000A
+;
+; ability_cooldown_timer--;
+;
+	lda     _ability_cooldown_timer
+	bne     L0008
+	dec     _ability_cooldown_timer+1
+L0008:	dec     _ability_cooldown_timer
+;
+; } else {
+;
+	rts
+;
+; ability_ready = 1;
+;
+L000A:	lda     #$01
+	sta     _ability_ready
+;
+; }
+;
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ start_ability_cooldown (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_start_ability_cooldown: near
+
+.segment	"CODE"
+
+;
+; ability_ready = 0;
+;
+	lda     #$00
+	sta     _ability_ready
+;
+; ability_cooldown_timer = get_current_cooldown_max();
+;
+	jsr     _get_current_cooldown_max
+	sta     _ability_cooldown_timer
+	stx     _ability_cooldown_timer+1
+;
+; }
+;
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; unsigned int __near__ get_current_cooldown_max (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_get_current_cooldown_max: near
+
+.segment	"CODE"
+
+;
+; if (selected_crewmate == 0) return ZARNELLA_COOLDOWN;
+;
+	lda     _selected_crewmate
+	bne     L0004
+	tax
+	lda     #$B4
+	rts
+;
+; if (selected_crewmate == 1) return LUMA6_COOLDOWN;
+;
+L0004:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L0003
+	ldx     #$02
+	lda     #$58
+	rts
+;
+; return BUBBLES_COOLDOWN;
+;
+L0003:	ldx     #$04
+	lda     #$B0
+;
+; }
+;
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ draw_ability_cooldown_bar (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_draw_ability_cooldown_bar: near
+
+.segment	"CODE"
+
+;
+; unsigned char segments = 4;
+;
+	lda     #$04
+	jsr     pusha
+;
+; unsigned char fill = 0;
+;
+	lda     #$00
+	jsr     pusha
+;
+; unsigned int max = get_current_cooldown_max();
+;
+	jsr     _get_current_cooldown_max
+	jsr     pushax
+;
+; char bar_string[] = "SPECIAL:[    \\";
+;
+	ldy     #$0F
+	jsr     subysp
+	ldy     #$0E
+L0002:	lda     M0001,y
+	sta     (sp),y
+	dey
+	bpl     L0002
+;
+; if (ability_ready) {
+;
+	lda     _ability_ready
+	beq     L0003
+;
+; fill = segments;
+;
+	ldy     #$12
+	lda     (sp),y
+;
+; } else {
+;
+	jmp     L0012
+;
+; fill = (segments * (max - ability_cooldown_timer)) / max;
+;
+L0003:	ldy     #$12
+	lda     (sp),y
+	jsr     pusha0
+	ldy     #$12
+	lda     (sp),y
+	tax
+	dey
+	lda     (sp),y
+	sec
+	sbc     _ability_cooldown_timer
+	pha
+	txa
+	sbc     _ability_cooldown_timer+1
+	tax
+	pla
+	jsr     tosumulax
+	jsr     pushax
+	ldy     #$12
+	lda     (sp),y
+	tax
+	dey
+	lda     (sp),y
+	jsr     tosudivax
+L0012:	ldy     #$11
+	sta     (sp),y
+;
+; for (i = 0; i < segments; ++i) {
+;
+	lda     #$00
+	sta     _i
+L000F:	lda     _i
+	ldy     #$12
+	cmp     (sp),y
+	bcs     L0006
+;
+; bar_string[9 + i] = (i < fill) ? '=' : ' ';
+;
+	ldx     #$00
+	lda     _i
+	clc
+	adc     #$09
+	bcc     L000E
+	inx
+	clc
+L000E:	adc     sp
+	sta     ptr1
+	txa
+	adc     sp+1
+	sta     ptr1+1
+	lda     _i
+	dey
+	cmp     (sp),y
+	bcs     L0010
+	lda     #$3D
+	jmp     L0011
+L0010:	lda     #$20
+L0011:	ldy     #$00
+	sta     (ptr1),y
+;
+; for (i = 0; i < segments; ++i) {
+;
+	inc     _i
+	jmp     L000F
+;
+; WRITE(bar_string, 17, 1);
+;
+L0006:	jsr     decsp3
+	lda     sp
+	ldx     sp+1
+	clc
+	adc     #$03
+	bcc     L000C
+	inx
+L000C:	ldy     #$01
+	sta     (sp),y
+	iny
+	txa
+	sta     (sp),y
+	lda     #$0E
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$31
+	jsr     _multi_vram_buffer_horz
+;
+; }
+;
+	ldy     #$13
+	jmp     addysp
+
+.segment	"RODATA"
+
+M0001:
+	.byte	$53,$50,$45,$43,$49,$41,$4C,$3A,$5B,$20,$20,$20,$20,$5C,$00
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ reset_companion_ability_state (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_reset_companion_ability_state: near
+
+.segment	"CODE"
+
+;
+; ability_ready = 1;
+;
+	lda     #$01
+	sta     _ability_ready
+;
+; ability_cooldown_timer = 0;
+;
+	lda     #$00
+	sta     _ability_cooldown_timer
+	sta     _ability_cooldown_timer+1
+;
+; player_invincible = 0;
+;
+	sta     _player_invincible
+;
+; invincibility_timer = 0;
+;
+	sta     _invincibility_timer
+;
+; }
+;
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
 ; void __near__ main (void)
 ; ---------------------------------------------------------------
 
@@ -1694,7 +2829,7 @@ L0003:	jmp     incsp4
 ;
 ; ppu_on_all();
 ;
-L005A:	jsr     _ppu_on_all
+L0074:	jsr     _ppu_on_all
 ;
 ; ppu_wait_nmi();
 ;
@@ -1718,7 +2853,7 @@ L0002:	jsr     _ppu_wait_nmi
 ; if (game_state == STATE_TITLE) {
 ;
 	lda     _game_state
-	bne     L003C
+	bne     L004B
 ;
 ; WRITE("LOVE & LASERS", 10, 12);
 ;
@@ -1798,9 +2933,9 @@ L0002:	jsr     _ppu_wait_nmi
 ; else if (game_state == STATE_BRIEFING) {
 ;
 	jmp     L0002
-L003C:	lda     _game_state
+L004B:	lda     _game_state
 	cmp     #$01
-	bne     L0040
+	bne     L004F
 ;
 ; BLINK_MSG("PRESS A BUTTON", 9, 15);
 ;
@@ -1879,9 +3014,9 @@ L003C:	lda     _game_state
 ; else if (game_state == STATE_SELECT_CREWMATE) {
 ;
 	jmp     L0002
-L0040:	lda     _game_state
+L004F:	lda     _game_state
 	cmp     #$02
-	jne     L0044
+	jne     L0053
 ;
 ; unsigned char old_crewmate = selected_crewmate;
 ;
@@ -1977,9 +3112,9 @@ L0013:	jsr     incsp1
 ; else if (game_state == STATE_CREWMATE_CONFIRM) {
 ;
 	jmp     L0002
-L0044:	lda     _game_state
+L0053:	lda     _game_state
 	cmp     #$03
-	bne     L0048
+	bne     L0057
 ;
 ; crewmate_confirm_text();
 ;
@@ -2007,17 +3142,21 @@ L0044:	lda     _game_state
 	lda     #$04
 	sta     _game_state
 ;
+; reset_companion_ability_state();
+;
+	jsr     _reset_companion_ability_state
+;
 ; else if (game_state == STATE_SHMUP) {
 ;
-	jmp     L005A
-L0048:	lda     _game_state
+	jmp     L0074
+L0057:	lda     _game_state
 	cmp     #$04
-	jne     L0050
+	jne     L006A
 ;
 ; if (!shmup_screen_drawn) {
 ;
 	lda     _shmup_screen_drawn
-	bne     L0049
+	bne     L0058
 ;
 ; ppu_off();
 ;
@@ -2042,7 +3181,7 @@ L0048:	lda     _game_state
 ;
 ; if (shmup_started == 0) {
 ;
-L0049:	lda     _shmup_started
+L0058:	lda     _shmup_started
 	bne     L0021
 ;
 ; BLINK_MSG("PRESS A TO START MISSION", 4, 24);
@@ -2092,11 +3231,41 @@ L0049:	lda     _shmup_started
 ;
 ; else {
 ;
-	jmp     L005A
+	jmp     L0074
 ;
 ; handle_shmup_input();
 ;
 L0021:	jsr     _handle_shmup_input
+;
+; if (player_invincible) {
+;
+	lda     _player_invincible
+	beq     L0029
+;
+; if (invincibility_timer > 0) {
+;
+	lda     _invincibility_timer
+	beq     L005D
+;
+; invincibility_timer--;
+;
+	dec     _invincibility_timer
+;
+; } else {
+;
+	jmp     L0029
+;
+; player_invincible = 0;
+;
+L005D:	sta     _player_invincible
+;
+; update_ability_cooldown();
+;
+L0029:	jsr     _update_ability_cooldown
+;
+; draw_ability_cooldown_bar();
+;
+	jsr     _draw_ability_cooldown_bar
 ;
 ; draw_player();
 ;
@@ -2110,9 +3279,13 @@ L0021:	jsr     _handle_shmup_input
 ;
 	jsr     _spawn_bullets
 ;
-; update_bullets();
+; update_regular_bullets();
 ;
-	jsr     _update_bullets
+	jsr     _update_regular_bullets
+;
+; update_special_bullets();
+;
+	jsr     _update_special_bullets
 ;
 ; spawn_enemies();
 ;
@@ -2130,9 +3303,55 @@ L0021:	jsr     _handle_shmup_input
 ;
 	jsr     _check_player_hit
 ;
-; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
+; if ((pad1 & PAD_B) && !(pad1_old & PAD_B)) {
 ;
 	lda     _pad1
+	and     #$40
+	beq     L0066
+	lda     _pad1_old
+	and     #$40
+	bne     L0066
+;
+; if (selected_crewmate == 0 && ability_ready) { // Zarnella
+;
+	lda     _selected_crewmate
+	bne     L0063
+	lda     _ability_ready
+	beq     L0063
+;
+; fire_zarnella_spread();
+;
+	jsr     _fire_zarnella_spread
+;
+; start_ability_cooldown();
+;
+	jsr     _start_ability_cooldown
+;
+; if (selected_crewmate == 1 && ability_ready) { // Luma-6
+;
+L0063:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L0066
+	lda     _ability_ready
+	beq     L0066
+;
+; player_invincible = 1;
+;
+	lda     #$01
+	sta     _player_invincible
+;
+; invincibility_timer = 180;
+;
+	lda     #$B4
+	sta     _invincibility_timer
+;
+; start_ability_cooldown();
+;
+	jsr     _start_ability_cooldown
+;
+; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
+;
+L0066:	lda     _pad1
 	and     #$10
 	jeq     L0002
 	lda     _pad1_old
@@ -2175,15 +3394,15 @@ L0021:	jsr     _handle_shmup_input
 ;
 ; else if (game_state == STATE_DIALOGUE) {
 ;
-	jmp     L005A
-L0050:	lda     _game_state
+	jmp     L0074
+L006A:	lda     _game_state
 	cmp     #$05
-	jne     L0055
+	jne     L006F
 ;
 ; if (!dialogue_shown) {
 ;
 	lda     _dialogue_shown
-	bne     L0051
+	bne     L006B
 ;
 ; ppu_off();
 ;
@@ -2252,7 +3471,7 @@ L0050:	lda     _game_state
 ;
 ; if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
 ;
-L0051:	lda     _pad1
+L006B:	lda     _pad1
 	and     #$80
 	jeq     L0002
 	lda     _pad1_old
@@ -2279,15 +3498,15 @@ L0051:	lda     _pad1
 ;
 ; else if (game_state == STATE_ENDING) {
 ;
-	jmp     L005A
-L0055:	lda     _game_state
+	jmp     L0074
+L006F:	lda     _game_state
 	cmp     #$06
 	jne     L0002
 ;
 ; if (!ending_shown) {
 ;
 	lda     _ending_shown
-	bne     L0056
+	bne     L0070
 ;
 ; ppu_off();
 ;
@@ -2356,7 +3575,7 @@ L0055:	lda     _game_state
 ;
 ; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 ;
-L0056:	lda     _pad1
+L0070:	lda     _pad1
 	and     #$10
 	jeq     L0002
 	lda     _pad1_old
@@ -2382,7 +3601,7 @@ L0056:	lda     _pad1
 ;
 ; while (1){
 ;
-	jmp     L005A
+	jmp     L0074
 
 .endproc
 

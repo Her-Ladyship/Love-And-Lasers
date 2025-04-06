@@ -8,10 +8,15 @@
 #define PRESS_A_LEN 14 // MIGHT BE HOLDOVER FROM OLD CODE
 
 #define MAX_BULLETS 3
+#define MAX_SPECIAL_BULLETS 5
 #define BULLET_RIGHT_LIMIT 252
 #define MAX_ENEMIES 6
 #define ENEMY_LEFT_LIMIT 8
 #define MAX_HEALTH 3
+
+#define ZARNELLA_COOLDOWN 180   // 3 sec
+#define LUMA6_COOLDOWN 600   // 10 sec
+#define BUBBLES_COOLDOWN 1200   // 20 sec
 
 #define PLAYFIELD_TOP 48
 #define PLAYFIELD_BOTTOM 192
@@ -28,10 +33,18 @@ struct Box {
 	unsigned char height;
 };
 
+struct Bullet {
+	unsigned char x;
+	unsigned char y;
+	signed char dx;
+	signed char dy;
+	unsigned char active;
+};
+
 const unsigned char palette[] = {
 	0x0f, 0x01, 0x21, 0x31,  // Background (blues)
-	0x0f, 0x17, 0x27, 0x37,  // Sprite palette 0 (red tones)
-	0, 0, 0, 0,              // unused
+	0x0f, 0x17, 0x27, 0x37,  // Sprite palette 0 (default red)
+	0x0f, 0x11, 0x21, 0x31,  // Sprite palette 1 (Luma-6 invincibility - cool blues)
 	0, 0, 0, 0
 };
 
@@ -46,15 +59,22 @@ enum GameState {
 };
 
 unsigned char game_state = STATE_TITLE;
-unsigned char frame_count = 0;
+unsigned char i = 0;
+unsigned char j = 0;
+char hp_string[] = "HP: 3";
+
 unsigned char selected_crewmate = 0;
 unsigned char shmup_screen_drawn = 0;
 unsigned char shmup_started = 0;
 unsigned char dialogue_shown = 0;
 unsigned char ending_shown = 0;
-unsigned char i = 0;
-unsigned char j = 0;
-char hp_string[] = "HP: 3";
+unsigned char ability_ready = 1;
+
+unsigned char frame_count = 0;
+unsigned int ability_cooldown_timer = 0;
+
+unsigned char player_invincible = 0;
+unsigned char invincibility_timer = 0;
 
 unsigned char pad1, pad1_old;
 
@@ -72,6 +92,8 @@ unsigned char enemy_active[MAX_ENEMIES];
 
 struct Box bullet_box;
 struct Box enemy_box;
+struct Bullet bullets[MAX_BULLETS];
+struct Bullet special_bullets[MAX_SPECIAL_BULLETS];
 
 const unsigned char player_sprite[] = {
 	0, 0, 0x41, 0,  // Tile 0x41 ('A' in standard ASCII CHR)
@@ -79,13 +101,18 @@ const unsigned char player_sprite[] = {
 };
 
 const unsigned char bullet_sprite[] = {
-	0, 0, 0x42, 0,  // Use tile 0x42 ('B')
+	0, 0, 0x42, 0,  // Tile 0x42 ('B')
 	128
 };
 
 const unsigned char enemy_sprite[] = {
     0, 0, 0x43, 0,  // Tile 0x43 ('C')
     128
+};
+
+const unsigned char special_bullet_sprite[] = {
+	0, 0, 0x66, 0,  // Tile 0x66 ('f')
+	128
 };
 
 void update_arrow(void);
@@ -102,11 +129,18 @@ void mission_begin_text(void);
 void crewmate_confirm_text(void);
 void handle_selection_arrow(void);
 void spawn_bullets(void);
-void update_bullets(void);
+void update_regular_bullets(void);
+void update_special_bullets(void);
 void draw_player(void);
 void enemy_killed_check(void);
 void check_player_hit(void);
 void draw_hud(void);
+void fire_zarnella_spread(void);
+void update_ability_cooldown(void);
+void start_ability_cooldown(void);
+unsigned int get_current_cooldown_max(void);
+void draw_ability_cooldown_bar(void);
+void reset_companion_ability_state(void);
 
 void main(void) {
 	ppu_off();
@@ -164,6 +198,7 @@ void main(void) {
 				ppu_off();
         		clear_screen();
 				game_state = STATE_SHMUP;
+				reset_companion_ability_state();
 				ppu_on_all();
 	    	}
 		}
@@ -188,17 +223,42 @@ void main(void) {
 			}
 			else {
 				handle_shmup_input();
+
+				if (player_invincible) {
+					if (invincibility_timer > 0) {
+						invincibility_timer--;
+					} else {
+						player_invincible = 0;
+					}
+				}
+				
+				update_ability_cooldown();
+				draw_ability_cooldown_bar();
+
 				draw_player();
 				draw_hud();
 
 				spawn_bullets();
-				update_bullets();
+				update_regular_bullets();
+				update_special_bullets();
 
 				spawn_enemies();
 				update_enemies();
 
 				enemy_killed_check();
 				check_player_hit();
+
+				if ((pad1 & PAD_B) && !(pad1_old & PAD_B)) {
+					if (selected_crewmate == 0 && ability_ready) { // Zarnella
+						fire_zarnella_spread();
+						start_ability_cooldown();
+					}
+					if (selected_crewmate == 1 && ability_ready) { // Luma-6
+						player_invincible = 1;
+						invincibility_timer = 180;
+						start_ability_cooldown();
+					}
+				}
 
 				// TEMP: transition to dialogue
 				if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
@@ -285,7 +345,7 @@ void clear_line(unsigned char y) {
 
 void clear_all_bullets(void) {
 	for (i = 0; i < MAX_BULLETS; ++i) {
-		bullet_active[i] = 0;
+		bullets[i].active = 0;
 	}
 }
 
@@ -378,56 +438,108 @@ void handle_selection_arrow(void) {
 void spawn_bullets(void) {
 	if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
 		for (i = 0; i < MAX_BULLETS; ++i) {
-			if (!bullet_active[i]) {
-				bullet_active[i] = 1;
-				bullet_x[i] = player_x + 8;
-				bullet_y[i] = player_y;
+			if (!bullets[i].active) {
+				bullets[i].active = 1;
+				bullets[i].x = player_x + 8;
+				bullets[i].y = player_y;
+				bullets[i].dx = 2;
+				bullets[i].dy = 0;
 				break;
 			}
 		}
 	}
 }
 
-void update_bullets(void) {
+void update_regular_bullets(void) {
 	for (i = 0; i < MAX_BULLETS; ++i) {
-		if (bullet_active[i]) {
-			bullet_x[i] += 2;
-			if (bullet_x[i] > BULLET_RIGHT_LIMIT) {
-				bullet_active[i] = 0;
+		if (bullets[i].active) {
+			bullets[i].x += bullets[i].dx;
+			bullets[i].y += bullets[i].dy;
+
+			if (bullets[i].x > BULLET_RIGHT_LIMIT || bullets[i].y > 240) {
+				bullets[i].active = 0;
 			} else {
-				oam_meta_spr(bullet_x[i], bullet_y[i], bullet_sprite);
+				oam_meta_spr(bullets[i].x, bullets[i].y, bullet_sprite);
+			}
+		}
+	}
+}
+
+void update_special_bullets(void) {
+	for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+		if (special_bullets[i].active) {
+			special_bullets[i].x += special_bullets[i].dx;
+			special_bullets[i].y += special_bullets[i].dy;
+
+		 if (special_bullets[i].x > BULLET_RIGHT_LIMIT || special_bullets[i].y > 240) {
+				special_bullets[i].active = 0;
+			} else {
+				oam_meta_spr(special_bullets[i].x, special_bullets[i].y, special_bullet_sprite);
 			}
 		}
 	}
 }
 
 void draw_player(void) {
+	const unsigned char* sprite = player_sprite;
+	static unsigned char temp_sprite[5];
 	oam_clear();
-	oam_meta_spr(player_x, player_y, player_sprite);
+
+	for (i = 0; i < 5; ++i) {
+		temp_sprite[i] = player_sprite[i];
+	}
+
+	// Use palette 1 while invincible (or make it flicker)
+	temp_sprite[3] = player_invincible ? 1 : 0;
+
+	oam_meta_spr(player_x, player_y, temp_sprite);
 }
 
 void enemy_killed_check(void) {
+	// === Check regular bullets ===
 	for (i = 0; i < MAX_BULLETS; ++i) {
-		if (bullet_active[i]) {
-			// Build bullet hitbox
-			bullet_box.x = bullet_x[i];
-			bullet_box.y = bullet_y[i];
+		if (bullets[i].active) {
+			bullet_box.x = bullets[i].x;
+			bullet_box.y = bullets[i].y;
 			bullet_box.width = 8;
 			bullet_box.height = 8;
 
 			for (j = 0; j < MAX_ENEMIES; ++j) {
 				if (enemy_active[j]) {
-					// Build enemy hitbox
 					enemy_box.x = enemy_x[j];
 					enemy_box.y = enemy_y[j];
 					enemy_box.width = 8;
 					enemy_box.height = 8;
 
 					if (check_collision(&bullet_box, &enemy_box)) {
-						// Boom!
-						bullet_active[i] = 0;
+						bullets[i].active = 0;
 						enemy_active[j] = 0;
-						break; // Stop checking this bullet
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// === Check Zarnella's spread bullets ===
+	for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+		if (special_bullets[i].active) {
+			bullet_box.x = special_bullets[i].x;
+			bullet_box.y = special_bullets[i].y;
+			bullet_box.width = 8;
+			bullet_box.height = 8;
+
+			for (j = 0; j < MAX_ENEMIES; ++j) {
+				if (enemy_active[j]) {
+					enemy_box.x = enemy_x[j];
+					enemy_box.y = enemy_y[j];
+					enemy_box.width = 8;
+					enemy_box.height = 8;
+
+					if (check_collision(&bullet_box, &enemy_box)) {
+						special_bullets[i].active = 0;
+						enemy_active[j] = 0;
+						break;
 					}
 				}
 			}
@@ -451,8 +563,11 @@ void check_player_hit(void) {
 
 			if (check_collision(&player_box, &enemy_box)) {
 				enemy_active[i] = 0; // enemy dies on impact
-				if (player_health > 0) player_health--;
-
+				if (!player_invincible) {
+					if (player_health > 0) {
+						player_health--;
+					}
+				}
 				if (player_health == 0) {
 					// PLAYER DEAD — maybe trigger game over
 					ppu_off();
@@ -472,4 +587,69 @@ void check_player_hit(void) {
 void draw_hud(void) {
 	hp_string[4] = '0' + player_health;
 	WRITE(hp_string, 2, 1); // Draw near top-left corner
+}
+
+void fire_zarnella_spread(void) {
+	const signed char spread_dx[5] = {1, 2, 2, 2, 1};
+	const signed char spread_dy[5] = {-1, -1, 0, 1, 1};
+
+	for (i = 0; i < 5; i++) {
+		for (j = 0; j < MAX_SPECIAL_BULLETS; j++) {
+			if (!special_bullets[j].active) {
+				special_bullets[j].active = 1;
+				special_bullets[j].x = player_x + 8;
+				special_bullets[j].y = player_y;
+				special_bullets[j].dx = spread_dx[i];
+				special_bullets[j].dy = spread_dy[i];
+				break;
+			}
+		}
+	}
+}
+
+void update_ability_cooldown(void) {
+	if (!ability_ready && !player_invincible) {
+		if (ability_cooldown_timer > 0) {
+			ability_cooldown_timer--;
+		} else {
+			ability_ready = 1;
+		}
+	}
+}
+
+void start_ability_cooldown(void) {
+	ability_ready = 0;
+	ability_cooldown_timer = get_current_cooldown_max();
+}
+
+unsigned int get_current_cooldown_max(void) {
+	if (selected_crewmate == 0) return ZARNELLA_COOLDOWN;
+	if (selected_crewmate == 1) return LUMA6_COOLDOWN;
+	return BUBBLES_COOLDOWN;
+}
+
+void draw_ability_cooldown_bar(void) {
+	unsigned char segments = 4;
+	unsigned char fill = 0;
+	unsigned int max = get_current_cooldown_max();
+	char bar_string[] = "SPECIAL:[    \\";
+
+	if (ability_ready) {
+		fill = segments;
+	} else {
+		fill = (segments * (max - ability_cooldown_timer)) / max;
+	}
+
+	for (i = 0; i < segments; ++i) {
+		bar_string[9 + i] = (i < fill) ? '=' : ' ';
+	}
+
+	WRITE(bar_string, 17, 1);
+}
+
+void reset_companion_ability_state(void) {
+	ability_ready = 1;
+	ability_cooldown_timer = 0;
+	player_invincible = 0;
+	invincibility_timer = 0;
 }
