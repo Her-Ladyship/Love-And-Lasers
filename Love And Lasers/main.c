@@ -14,7 +14,7 @@
 #define ENEMY_LEFT_LIMIT 8
 #define MAX_HEALTH 3
 
-#define ZARNELLA_COOLDOWN 180   // 3 sec
+#define ZARNELLA_COOLDOWN 300   // 5 sec
 #define LUMA6_COOLDOWN 600   // 10 sec
 #define BUBBLES_COOLDOWN 1200   // 20 sec
 
@@ -89,6 +89,14 @@ unsigned char bullet_active[MAX_BULLETS];
 unsigned char enemy_x[MAX_ENEMIES];
 unsigned char enemy_y[MAX_ENEMIES];
 unsigned char enemy_active[MAX_ENEMIES];
+unsigned char enemy_frozen[MAX_ENEMIES];
+unsigned int freeze_timer = 0;
+
+unsigned int player_score = 0;
+char score_string[] = "SCORE: 00000";
+
+unsigned int shmup_timer = 5400; // 90 seconds × 60 frames
+char timer_string[] = "TIMER: 90";
 
 struct Box bullet_box;
 struct Box enemy_box;
@@ -141,6 +149,8 @@ void start_ability_cooldown(void);
 unsigned int get_current_cooldown_max(void);
 void draw_ability_cooldown_bar(void);
 void reset_companion_ability_state(void);
+void update_score_string(void);
+void update_timer_string(void);
 
 void main(void) {
 	ppu_off();
@@ -224,6 +234,23 @@ void main(void) {
 			else {
 				handle_shmup_input();
 
+				if (shmup_timer > 0) {
+					shmup_timer--;
+					if (shmup_timer == 0) {
+						ppu_off();
+						clear_screen();
+						clear_all_bullets();
+						clear_all_enemies();
+						oam_clear();
+						shmup_screen_drawn = 0;
+						shmup_started = 0;
+						player_health = MAX_HEALTH;
+						shmup_timer = 5400;
+						game_state = STATE_DIALOGUE;
+						ppu_on_all();
+					}
+				}
+
 				if (player_invincible) {
 					if (invincibility_timer > 0) {
 						invincibility_timer--;
@@ -231,10 +258,20 @@ void main(void) {
 						player_invincible = 0;
 					}
 				}
+
+				if (freeze_timer > 0) {
+					freeze_timer--;
+					if (freeze_timer == 0) {
+						for (i = 0; i < MAX_ENEMIES; ++i) {
+							enemy_frozen[i] = 0; // unfreeze everyone
+						}
+					}
+				}
 				
 				update_ability_cooldown();
 				draw_ability_cooldown_bar();
 
+				oam_clear();
 				draw_player();
 				draw_hud();
 
@@ -258,6 +295,15 @@ void main(void) {
 						invincibility_timer = 180;
 						start_ability_cooldown();
 					}
+					if (selected_crewmate == 2 && ability_ready) { // Mr Bubbles
+						for (i = 0; i < MAX_ENEMIES; ++i) {
+							if (enemy_active[i]) {
+								enemy_frozen[i] = 1;
+							}
+						}
+						freeze_timer = 300;
+						start_ability_cooldown();
+					}
 				}
 
 				// TEMP: transition to dialogue
@@ -269,6 +315,8 @@ void main(void) {
 					oam_clear();
 					shmup_screen_drawn = 0;
 					shmup_started = 0;
+					player_health = MAX_HEALTH;
+					shmup_timer = 5400;
 					game_state = STATE_DIALOGUE;
 					ppu_on_all();
 				}
@@ -337,6 +385,7 @@ void draw_crewmate_menu(void) {
 void clear_screen(void) {
 	vram_adr(NTADR_A(0, 0));
 	vram_fill(' ', 32 * 30);
+	oam_clear();
 }
 
 void clear_line(unsigned char y) {
@@ -371,11 +420,13 @@ void spawn_enemies(void) {
 void update_enemies(void) {
 	for (i = 0; i < MAX_ENEMIES; ++i) {
 		if (enemy_active[i]) {
-			if (frame_count % 2 == 0) { // Only move every other frame
-				if (enemy_x[i] <= ENEMY_LEFT_LIMIT) {
-					enemy_active[i] = 0;
-				} else {
-					enemy_x[i] -= 1;
+			if (frame_count % 2 == 0) {
+				if (!enemy_frozen[i]) {
+					if (enemy_x[i] <= ENEMY_LEFT_LIMIT) {
+						enemy_active[i] = 0;
+					} else {
+						enemy_x[i] -= 1;
+					}
 				}
 			}
 			oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite);
@@ -483,7 +534,6 @@ void update_special_bullets(void) {
 void draw_player(void) {
 	const unsigned char* sprite = player_sprite;
 	static unsigned char temp_sprite[5];
-	oam_clear();
 
 	for (i = 0; i < 5; ++i) {
 		temp_sprite[i] = player_sprite[i];
@@ -496,24 +546,19 @@ void draw_player(void) {
 }
 
 void enemy_killed_check(void) {
-	// === Check regular bullets ===
+	// === Check regular bullets (staggered) ===
 	for (i = 0; i < MAX_BULLETS; ++i) {
+		if (i % 2 != (frame_count % 2)) continue; // skip this bullet this frame
+
 		if (bullets[i].active) {
-			bullet_box.x = bullets[i].x;
-			bullet_box.y = bullets[i].y;
-			bullet_box.width = 8;
-			bullet_box.height = 8;
-
 			for (j = 0; j < MAX_ENEMIES; ++j) {
-				if (enemy_active[j]) {
-					enemy_box.x = enemy_x[j];
-					enemy_box.y = enemy_y[j];
-					enemy_box.width = 8;
-					enemy_box.height = 8;
-
-					if (check_collision(&bullet_box, &enemy_box)) {
+				if (enemy_active[j] && enemy_x[j] <= 240) {
+					if ((bullets[i].x > enemy_x[j] ? bullets[i].x - enemy_x[j] : enemy_x[j] - bullets[i].x) < 6 &&
+						(bullets[i].y > enemy_y[j] ? bullets[i].y - enemy_y[j] : enemy_y[j] - bullets[i].y) < 6) {
 						bullets[i].active = 0;
 						enemy_active[j] = 0;
+						enemy_frozen[j] = 0;
+						player_score += 10;
 						break;
 					}
 				}
@@ -521,24 +566,19 @@ void enemy_killed_check(void) {
 		}
 	}
 
-	// === Check Zarnella's spread bullets ===
+	// === Check Zarnella's spread bullets (staggered) ===
 	for (i = 0; i < MAX_SPECIAL_BULLETS; ++i) {
+		if (i % 2 != (frame_count % 2)) continue; // stagger special bullets
+
 		if (special_bullets[i].active) {
-			bullet_box.x = special_bullets[i].x;
-			bullet_box.y = special_bullets[i].y;
-			bullet_box.width = 8;
-			bullet_box.height = 8;
-
 			for (j = 0; j < MAX_ENEMIES; ++j) {
-				if (enemy_active[j]) {
-					enemy_box.x = enemy_x[j];
-					enemy_box.y = enemy_y[j];
-					enemy_box.width = 8;
-					enemy_box.height = 8;
-
-					if (check_collision(&bullet_box, &enemy_box)) {
+				if (enemy_active[j] && enemy_x[j] <= 240) {
+					if ((special_bullets[i].x > enemy_x[j] ? special_bullets[i].x - enemy_x[j] : enemy_x[j] - special_bullets[i].x) < 6 &&
+    					(special_bullets[i].y > enemy_y[j] ? special_bullets[i].y - enemy_y[j] : enemy_y[j] - special_bullets[i].y) < 6) {
 						special_bullets[i].active = 0;
 						enemy_active[j] = 0;
+						enemy_frozen[j] = 0;
+						player_score += 10;
 						break;
 					}
 				}
@@ -548,26 +588,19 @@ void enemy_killed_check(void) {
 }
 
 void check_player_hit(void) {
-	struct Box player_box;
-	player_box.x = player_x;
-	player_box.y = player_y;
-	player_box.width = 8;
-	player_box.height = 8;
-
 	for (i = 0; i < MAX_ENEMIES; ++i) {
-		if (enemy_active[i]) {
-			enemy_box.x = enemy_x[i];
-			enemy_box.y = enemy_y[i];
-			enemy_box.width = 8;
-			enemy_box.height = 8;
+		if (enemy_active[i] && enemy_x[i] < 44) {
+			if ((player_x > enemy_x[i] ? player_x - enemy_x[i] : enemy_x[i] - player_x) < 6 &&
+			    (player_y > enemy_y[i] ? player_y - enemy_y[i] : enemy_y[i] - player_y) < 6) {
 
-			if (check_collision(&player_box, &enemy_box)) {
 				enemy_active[i] = 0; // enemy dies on impact
+
 				if (!player_invincible) {
 					if (player_health > 0) {
 						player_health--;
 					}
 				}
+
 				if (player_health == 0) {
 					// PLAYER DEAD — maybe trigger game over
 					ppu_off();
@@ -575,9 +608,11 @@ void check_player_hit(void) {
 					clear_all_bullets();
 					clear_all_enemies();
 					oam_clear();
+					player_health = MAX_HEALTH;
 					game_state = STATE_DIALOGUE; // FOR NOW
 					ppu_on_all();
 				}
+
 				break; // Only take 1 hit per frame
 			}
 		}
@@ -586,7 +621,11 @@ void check_player_hit(void) {
 
 void draw_hud(void) {
 	hp_string[4] = '0' + player_health;
-	WRITE(hp_string, 2, 1); // Draw near top-left corner
+	WRITE(hp_string, 2, 1);
+	update_score_string();
+	WRITE(score_string, 10, 1);
+	update_timer_string();
+	WRITE(timer_string, 2, 27);
 }
 
 void fire_zarnella_spread(void) {
@@ -608,7 +647,7 @@ void fire_zarnella_spread(void) {
 }
 
 void update_ability_cooldown(void) {
-	if (!ability_ready && !player_invincible) {
+	if (!ability_ready) {
 		if (ability_cooldown_timer > 0) {
 			ability_cooldown_timer--;
 		} else {
@@ -632,7 +671,7 @@ void draw_ability_cooldown_bar(void) {
 	unsigned char segments = 4;
 	unsigned char fill = 0;
 	unsigned int max = get_current_cooldown_max();
-	char bar_string[] = "SPECIAL:[    \\";
+	char bar_string[] = "[    \\";
 
 	if (ability_ready) {
 		fill = segments;
@@ -641,10 +680,10 @@ void draw_ability_cooldown_bar(void) {
 	}
 
 	for (i = 0; i < segments; ++i) {
-		bar_string[9 + i] = (i < fill) ? '=' : ' ';
+		bar_string[1 + i] = (i < fill) ? '=' : ' ';
 	}
 
-	WRITE(bar_string, 17, 1);
+	WRITE(bar_string, 25, 1);
 }
 
 void reset_companion_ability_state(void) {
@@ -652,4 +691,19 @@ void reset_companion_ability_state(void) {
 	ability_cooldown_timer = 0;
 	player_invincible = 0;
 	invincibility_timer = 0;
+}
+
+void update_score_string(void) {
+	unsigned int temp_score = player_score;
+	score_string[7] = '0' + (temp_score / 10000) % 10;
+	score_string[8] = '0' + (temp_score / 1000) % 10;
+	score_string[9] = '0' + (temp_score / 100) % 10;
+	score_string[10] = '0' + (temp_score / 10) % 10;
+	score_string[11] = '0' + temp_score % 10;
+}
+
+void update_timer_string(void) {
+	unsigned int seconds = shmup_timer / 60;
+	timer_string[7] = '0' + (seconds / 10) % 10;
+	timer_string[8] = '0' + (seconds % 10);
 }
