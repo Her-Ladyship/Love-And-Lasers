@@ -14,6 +14,7 @@
 	.export		_current_level
 	.export		_i
 	.export		_j
+	.export		_briefing_step
 	.export		_selected_crewmate
 	.export		_shmup_screen_drawn
 	.export		_shmup_started
@@ -40,6 +41,8 @@
 	.export		_score_string
 	.export		_shmup_timer
 	.export		_timer_string
+	.export		_briefing_line
+	.export		_briefing_started
 	.export		_bullet_box
 	.export		_enemy_box
 	.export		_player_sprite
@@ -57,6 +60,8 @@ _current_level:
 _i:
 	.byte	$00
 _j:
+	.byte	$00
+_briefing_step:
 	.byte	$00
 _selected_crewmate:
 	.byte	$00
@@ -98,6 +103,10 @@ _shmup_timer:
 	.word	$1518
 _timer_string:
 	.byte	$54,$49,$4D,$45,$52,$3A,$20,$39,$30,$00
+_briefing_line:
+	.byte	$00
+_briefing_started:
+	.byte	$00
 
 .segment	"RODATA"
 

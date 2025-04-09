@@ -16,6 +16,7 @@ cc65 -Oirs player.c --add-source
 cc65 -Oirs screens.c --add-source
 cc65 -Oirs companions.c --add-source
 cc65 -Oirs levels.c --add-source
+cc65 -Oirs dialogue.c --add-source
 
 ca65 crt0.s
 ca65 %name%.s -g
@@ -27,9 +28,10 @@ ca65 player.s
 ca65 screens.s
 ca65 companions.s
 ca65 levels.s
+ca65 dialogue.s
 
 :: Link all .o files together
-ld65 -C nrom_32k_vert.cfg -o %name%.nes crt0.o main.o enemies.o globals.o bullets.o hud.o player.o screens.o companions.o levels.o nes.lib -Ln %name%.labels --dbgfile %name%.dbg
+ld65 -C nrom_32k_vert.cfg -o %name%.nes crt0.o main.o enemies.o globals.o bullets.o hud.o player.o screens.o companions.o levels.o dialogue.o nes.lib -Ln %name%.labels --dbgfile %name%.dbg
 
 del *.o
 

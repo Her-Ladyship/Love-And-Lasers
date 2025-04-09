@@ -9,6 +9,7 @@
 #include "screens.h"
 #include "companions.h"
 #include "levels.h"
+#include "dialogue.h"
 
 void main(void) {
 	ppu_off();
@@ -29,19 +30,29 @@ void main(void) {
 			if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 				ppu_off();
 				clear_screen();
-				WRITE("BRIEFING GOES HERE", 7, 12);
 				ppu_on_all();
 				game_state = STATE_BRIEFING;
 			}
 		}
 		else if (game_state == STATE_BRIEFING) {
-			BLINK_MSG("PRESS A BUTTON", 9, 15);
-			if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
+			if (!briefing_started) {
+				ppu_off();
+				clear_screen();
+				briefing_started = 1;
+				ppu_on_all();
+			}
+
+			show_briefing_typewriter();
+
+			if ((pad1 & PAD_A) && !(pad1_old & PAD_A) && is_briefing_done()) {
 				ppu_off();
 				clear_screen();
 				WRITE("SELECT YOUR CREWMATE", 6, 4);
 				clear_line(15);
 				selected_crewmate = 0;
+				briefing_step = 0;
+				briefing_line = 0; // Reset if replayed later
+				briefing_started = 0;
 				draw_crewmate_menu();
 				ppu_on_all();
 				game_state = STATE_SELECT_CREWMATE;

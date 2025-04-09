@@ -23,20 +23,3 @@ void display_blinking_message(const char* message, unsigned char len, unsigned c
 		}
 	}
 }
-
-void mission_begin_text(void) {
-	if (selected_crewmate == 0) {
-		WRITE("ZARNELLA:", 11, 10);
-		WRITE("IF YOU GET ME KILLED,", 5, 13);
-		WRITE("I'LL HAUNT YOU PERSONALLY", 3, 15);
-	}
-	else if (selected_crewmate == 1) {
-		WRITE("LUMA-6:", 12, 10);
-		WRITE("TACTICAL SYSTEMS GREEN -", 4, 13);
-		WRITE("LET'S MAKE THIS EFFICIENT", 3, 15);
-	}
-	else {
-		WRITE("MR BUBBLES:", 11, 10);
-		WRITE("BUBBLE MODE ENGAGED!", 6, 13);
-	}
-}

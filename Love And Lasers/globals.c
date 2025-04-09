@@ -7,6 +7,7 @@ unsigned char game_state = STATE_TITLE;
 unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;
+unsigned char briefing_step = 0;
 unsigned char selected_crewmate = 0;
 unsigned char shmup_screen_drawn = 0;
 unsigned char shmup_started = 0;
@@ -40,6 +41,8 @@ char score_string[13] = "SCORE: 00000";
 
 unsigned int shmup_timer = 5400;
 char timer_string[10] = "TIMER: 90";
+unsigned char briefing_line = 0;
+unsigned char briefing_started = 0;
 
 struct Box bullet_box;
 struct Box enemy_box;
