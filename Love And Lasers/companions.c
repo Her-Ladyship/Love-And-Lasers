@@ -1,48 +1,50 @@
 
 #include "companions.h"
 #include "globals.h"
+#include "screens.h"
 #include "lib/neslib.h"
 #include "lib/nesdoug.h"
 #include "enemies.h"
 #include "hud.h"
 
 void update_arrow(void) {
-	int arrow_addr = NTADR_A(8, 11 + selected_crewmate * 4);
+	int arrow_addr = NTADR_A(6, 10 + selected_crewmate * 6);
 	one_vram_buffer('>', arrow_addr);
 }
 
 void draw_crewmate_menu(void) {
-	WRITE("ZARNELLA", 10, 11);
-	WRITE("LUMA-6", 10, 15);
-	WRITE("MR BUBBLES", 10, 19);
+	WRITE("ZARNELLA", 11, 10);
+	WRITE("LUMA-6", 12, 16);
+	WRITE("MR. BUBBLES", 10, 22);
 }
 
-void crewmate_confirm_text(void) {
-    if (selected_crewmate == 0) {
-		WRITE("ZARNELLA: DON'T SLOW ME", 2, 12);
-		WRITE("          DOWN, MEATBAG.", 2, 14);
-    }
-	else if (selected_crewmate == 1) {
-		WRITE("LUMA-6: UPLOADING MISSION", 2, 12);
-		WRITE("        PROTOCOLS.", 2, 14);
+void resting_companion_text(void) {
+	if (previous_crewmate == 0) {
+		BLINK_MSG("OUT HUNTING SPACE WITCHES", 3, 12);
 	}
-    else {
-		WRITE("MR BUBBLES: WUBBLE WUBBLE", 2, 12);
-		WRITE("            WUBBLE WUBBLE!", 2, 14);
+		if (previous_crewmate == 1) {
+		BLINK_MSG("RECHARGING TACTICAL CORE", 4, 18);
+	}
+		if (previous_crewmate == 2) {
+		BLINK_MSG("BUBBLING IN THE DARK", 6, 24);
 	}
 }
 
 void handle_selection_arrow(void) {
-	// Move selection down
+	// DOWN
 	if ((pad1 & PAD_DOWN) && !(pad1_old & PAD_DOWN)) {
-		selected_crewmate++;
-		if (selected_crewmate > 2) selected_crewmate = 0;
+		do {
+			selected_crewmate = (selected_crewmate + 1) % 3;
+		} while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
 	}
-	// Move selection up
+
+	// UP
 	if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
-		if (selected_crewmate == 0) selected_crewmate = 2;
-		else selected_crewmate--;
+		do {
+			selected_crewmate = (selected_crewmate == 0) ? 2 : selected_crewmate - 1;
+		} while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
 	}
+
 }
 
 void update_ability_cooldown(void) {

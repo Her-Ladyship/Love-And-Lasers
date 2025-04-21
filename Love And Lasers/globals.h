@@ -33,7 +33,6 @@ enum GameState {
   STATE_TITLE,
   STATE_BRIEFING,
   STATE_SELECT_CREWMATE,
-  STATE_CREWMATE_CONFIRM,
   STATE_SHMUP,
   STATE_DIALOGUE,
   STATE_ENDING,
@@ -60,8 +59,8 @@ struct Bullet {
 extern unsigned char game_state;
 extern unsigned char current_level;
 extern unsigned char i, j;
-extern unsigned char briefing_step;
 extern unsigned char selected_crewmate;
+extern unsigned char previous_crewmate;
 extern unsigned char shmup_screen_drawn, shmup_started;
 extern unsigned char dialogue_shown, ending_shown;
 extern unsigned char ability_ready;
@@ -91,7 +90,10 @@ extern char score_string[13];
 
 extern unsigned int shmup_timer;
 extern char timer_string[10];
-extern unsigned char briefing_line;
+
+extern unsigned char typewriter_step;
+extern unsigned char typewriter_line;
+extern unsigned char typewriter_ended;
 extern unsigned char briefing_started;
 
 extern struct Box bullet_box;

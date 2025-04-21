@@ -4,7 +4,7 @@
 
 void update_arrow(void);
 void draw_crewmate_menu(void);
-void crewmate_confirm_text(void);
+void resting_companion_text(void);
 void handle_selection_arrow(void);
 
 void update_ability_cooldown(void);

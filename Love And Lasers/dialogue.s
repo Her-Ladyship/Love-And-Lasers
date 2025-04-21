@@ -10,22 +10,31 @@
 	.importzp	sp, sreg, regsave, regbank
 	.importzp	tmp1, tmp2, tmp3, tmp4, ptr1, ptr2, ptr3, ptr4
 	.macpack	longbranch
-	.export		_show_briefing_typewriter
-	.export		_is_briefing_done
+	.export		_typewriter_char
+	.export		_briefing_lines
+	.export		_zarnella_lv1_start
+	.export		_luma_lv1_start
+	.export		_bubbles_lv1_start
+	.export		_zarnella_lv1_end
+	.export		_luma_lv1_end
+	.export		_bubbles_lv1_end
+	.export		_show_typewriter
+	.export		_typewriter_reset
 	.export		_mission_begin_text
+	.export		_mission_end_text
 	.import		_one_vram_buffer
 	.import		_multi_vram_buffer_horz
 	.import		_selected_crewmate
-	.import		_briefing_line
-	.export		_briefing_lines
-	.export		_briefing_char
-	.export		_briefing_delay
+	.import		_typewriter_step
+	.import		_typewriter_line
+	.import		_typewriter_ended
+	.export		_typewriter_delay
 
 .segment	"DATA"
 
-_briefing_char:
+_typewriter_char:
 	.byte	$00
-_briefing_delay:
+_typewriter_delay:
 	.byte	$00
 
 .segment	"RODATA"
@@ -55,155 +64,247 @@ _briefing_lines:
 	.addr	S0008
 	.byte	$01
 	.byte	$16
+_zarnella_lv1_start:
 	.addr	S0009
-	.byte	$09
-	.byte	$1A
+	.byte	$02
+	.byte	$0B
+	.addr	S000A
+	.byte	$06
+	.byte	$0F
+	.addr	S000B
+	.byte	$03
+	.byte	$11
+_luma_lv1_start:
+	.addr	S000C
+	.byte	$02
+	.byte	$0B
+	.addr	S000D
+	.byte	$04
+	.byte	$0F
+	.addr	S000E
+	.byte	$03
+	.byte	$11
+_bubbles_lv1_start:
+	.addr	S000F
+	.byte	$02
+	.byte	$0B
+	.addr	S0010
+	.byte	$06
+	.byte	$0F
+_zarnella_lv1_end:
+	.addr	S0011
+	.byte	$02
+	.byte	$0B
+	.addr	S0012
+	.byte	$05
+	.byte	$0F
+_luma_lv1_end:
+	.addr	S0013
+	.byte	$03
+	.byte	$0B
+	.addr	S0014
+	.byte	$05
+	.byte	$0F
+_bubbles_lv1_end:
+	.addr	S0015
+	.byte	$04
+	.byte	$0B
+	.addr	S0016
+	.byte	$0B
+	.byte	$0F
 S0004:
 	.byte	$4F,$55,$54,$50,$4F,$53,$54,$20,$44,$45,$4C,$54,$41,$2D,$5A,$55
 	.byte	$4C,$55,$2D,$37,$20,$57,$45,$4E,$54,$20,$44,$41,$52,$4B,$2E,$00
-S0007:
-	.byte	$45,$58,$50,$4C,$4F,$53,$49,$4F,$4E,$53,$20,$4F,$50,$54,$49,$4F
-	.byte	$4E,$41,$4C,$20,$42,$55,$54,$20,$4C,$49,$4B,$45,$4C,$59,$00
 S0008:
 	.byte	$59,$4F,$55,$27,$52,$45,$20,$4F,$55,$52,$20,$4F,$4E,$4C,$59,$20
 	.byte	$48,$4F,$50,$45,$2E,$20,$53,$4F,$52,$54,$20,$4F,$46,$2E,$00
-S0005:
-	.byte	$50,$4F,$53,$53,$49,$42,$4C,$45,$20,$41,$49,$20,$47,$4F,$4E,$45
-	.byte	$20,$52,$4F,$47,$55,$45,$2E,$20,$41,$47,$41,$49,$4E,$2E,$00
 S0006:
 	.byte	$47,$4F,$20,$49,$4E,$20,$48,$41,$52,$44,$20,$41,$4E,$44,$20,$46
 	.byte	$49,$4E,$44,$20,$54,$48,$45,$20,$54,$52,$55,$54,$48,$2E,$00
+S0005:
+	.byte	$50,$4F,$53,$53,$49,$42,$4C,$45,$20,$41,$49,$20,$47,$4F,$4E,$45
+	.byte	$20,$52,$4F,$47,$55,$45,$2E,$20,$41,$47,$41,$49,$4E,$2E,$00
+S0007:
+	.byte	$45,$58,$50,$4C,$4F,$53,$49,$4F,$4E,$53,$20,$4F,$50,$54,$49,$4F
+	.byte	$4E,$41,$4C,$20,$42,$55,$54,$20,$4C,$49,$4B,$45,$4C,$59,$00
+S0011:
+	.byte	$57,$45,$4C,$4C,$2C,$20,$54,$48,$41,$54,$20,$57,$41,$53,$4E,$27
+	.byte	$54,$20,$2A,$54,$45,$52,$52,$49,$42,$4C,$45,$2A,$2E,$00
 S0001:
 	.byte	$47,$41,$4C,$41,$43,$54,$49,$43,$20,$43,$4F,$4D,$4D,$41,$4E,$44
 	.byte	$20,$42,$4F,$4F,$54,$49,$4E,$47,$20,$55,$50,$2E,$2E,$00
+S0009:
+	.byte	$44,$4F,$4E,$27,$54,$20,$53,$4C,$4F,$57,$20,$4D,$45,$20,$44,$4F
+	.byte	$57,$4E,$2C,$20,$4D,$45,$41,$54,$42,$41,$47,$2E,$00
+S000F:
+	.byte	$57,$55,$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$20,$57,$55
+	.byte	$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$21,$00
+S0013:
+	.byte	$4D,$49,$53,$53,$49,$4F,$4E,$20,$50,$41,$52,$41,$4D,$45,$54,$45
+	.byte	$52,$53,$20,$43,$4F,$4D,$50,$4C,$45,$54,$45,$00
+S000C:
+	.byte	$55,$50,$4C,$4F,$41,$44,$49,$4E,$47,$20,$4D,$49,$53,$53,$49,$4F
+	.byte	$4E,$20,$50,$52,$4F,$54,$4F,$43,$4F,$4C,$53,$00
 S0003:
 	.byte	$4F,$52,$20,$41,$54,$20,$4C,$45,$41,$53,$54,$20,$53,$4F,$4D,$45
 	.byte	$4F,$4E,$45,$20,$53,$48,$4F,$4F,$54,$59,$2E,$00
-S0014:
+S000B:
+	.byte	$49,$27,$4C,$4C,$20,$48,$41,$55,$4E,$54,$20,$59,$4F,$55,$20,$50
+	.byte	$45,$52,$53,$4F,$4E,$41,$4C,$4C,$59,$2E,$00
+S000E:
 	.byte	$4C,$45,$54,$27,$53,$20,$4D,$41,$4B,$45,$20,$54,$48,$49,$53,$20
 	.byte	$45,$46,$46,$49,$43,$49,$45,$4E,$54,$00
-S000E:
-	.byte	$49,$27,$4C,$4C,$20,$48,$41,$55,$4E,$54,$20,$59,$4F,$55,$20,$50
-	.byte	$45,$52,$53,$4F,$4E,$41,$4C,$4C,$59,$00
-S0012:
-	.byte	$54,$41,$43,$54,$49,$43,$41,$4C,$20,$53,$59,$53,$54,$45,$4D,$53
-	.byte	$20,$47,$52,$45,$45,$4E,$20,$2D,$00
+S0015:
+	.byte	$42,$55,$42,$42,$4C,$45,$20,$4D,$49,$53,$53,$49,$4F,$4E,$20,$53
+	.byte	$55,$43,$43,$45,$53,$53,$46,$55,$4C,$00
 S0002:
 	.byte	$43,$41,$50,$54,$41,$49,$4E,$2C,$20,$57,$45,$20,$4E,$45,$45,$44
 	.byte	$20,$41,$20,$48,$45,$52,$4F,$2C,$00
-S000C:
-	.byte	$49,$46,$20,$59,$4F,$55,$20,$47,$45,$54,$20,$4D,$45,$20,$4B,$49
-	.byte	$4C,$4C,$45,$44,$2C,$00
-S0018:
+S000D:
+	.byte	$54,$41,$43,$54,$49,$43,$41,$4C,$20,$53,$59,$53,$54,$45,$4D,$53
+	.byte	$20,$47,$52,$45,$45,$4E,$20,$2D,$00
+S0014:
+	.byte	$4E,$49,$43,$45,$20,$53,$48,$4F,$4F,$54,$49,$4E,$47,$2C,$20,$49
+	.byte	$20,$47,$55,$45,$53,$53,$2E,$00
+S0012:
+	.byte	$44,$4F,$4E,$27,$54,$20,$45,$58,$50,$45,$43,$54,$20,$4D,$45,$20
+	.byte	$54,$4F,$20,$43,$4C,$41,$50,$00
+S0010:
 	.byte	$42,$55,$42,$42,$4C,$45,$20,$4D,$4F,$44,$45,$20,$45,$4E,$47,$41
 	.byte	$47,$45,$44,$21,$00
-S0009:
-	.byte	$50,$52,$45,$53,$53,$20,$41,$20,$42,$55,$54,$54,$4F,$4E,$00
-S0016:
-	.byte	$4D,$52,$20,$42,$55,$42,$42,$4C,$45,$53,$3A,$00
 S000A:
+	.byte	$49,$46,$20,$59,$4F,$55,$20,$47,$45,$54,$20,$4D,$45,$20,$4B,$49
+	.byte	$4C,$4C,$45,$44,$00
+S0021:
+	.byte	$4D,$52,$2E,$20,$42,$55,$42,$42,$4C,$45,$53,$3A,$00
+S001B	:=	S0021+0
+S0016:
+	.byte	$57,$48,$45,$45,$45,$45,$45,$45,$45,$45,$21,$00
+S001D:
 	.byte	$5A,$41,$52,$4E,$45,$4C,$4C,$41,$3A,$00
-S0010:
+S0017	:=	S001D+0
+S001F:
 	.byte	$4C,$55,$4D,$41,$2D,$36,$3A,$00
+S0019	:=	S001F+0
 
 ; ---------------------------------------------------------------
-; void __near__ show_briefing_typewriter (void)
+; void __near__ show_typewriter (const struct $anon-struct-0001 *lines, unsigned char line_count)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_show_briefing_typewriter: near
+.proc	_show_typewriter: near
 
 .segment	"CODE"
 
 ;
-; const char* current = briefing_lines[briefing_line].text;
+; void show_typewriter(const DialogueLine* lines, unsigned char line_count) {
+;
+	jsr     pusha
+;
+; const char* current = lines[typewriter_line].text;
 ;
 	ldx     #$00
-	lda     _briefing_line
+	lda     _typewriter_line
 	jsr     aslax2
 	clc
-	adc     #<(_briefing_lines)
+	ldy     #$01
+	adc     (sp),y
 	sta     ptr1
 	txa
-	adc     #>(_briefing_lines)
+	iny
+	adc     (sp),y
 	sta     ptr1+1
-	ldy     #$01
+	dey
 	lda     (ptr1),y
 	tax
 	dey
 	lda     (ptr1),y
 	jsr     pushax
 ;
-; unsigned char x = briefing_lines[briefing_line].x;
+; unsigned char x = lines[typewriter_line].x;
 ;
 	ldx     #$00
-	lda     _briefing_line
+	lda     _typewriter_line
 	jsr     aslax2
 	clc
-	adc     #<(_briefing_lines)
+	ldy     #$03
+	adc     (sp),y
 	sta     ptr1
 	txa
-	adc     #>(_briefing_lines)
+	iny
+	adc     (sp),y
 	sta     ptr1+1
 	ldy     #$02
 	lda     (ptr1),y
 	jsr     pusha
 ;
-; unsigned char y = briefing_lines[briefing_line].y;
+; unsigned char y = lines[typewriter_line].y;
 ;
 	ldx     #$00
-	lda     _briefing_line
+	lda     _typewriter_line
 	jsr     aslax2
 	clc
-	adc     #<(_briefing_lines)
+	ldy     #$04
+	adc     (sp),y
 	sta     ptr1
 	txa
-	adc     #>(_briefing_lines)
+	iny
+	adc     (sp),y
 	sta     ptr1+1
 	ldy     #$03
 	lda     (ptr1),y
 	jsr     pusha
 ;
-; if (briefing_line >= NUM_BRIEFING_LINES) return;
+; if (typewriter_line >= line_count) {
 ;
-	lda     _briefing_line
-	cmp     #$09
-	bcs     L0005
+	lda     _typewriter_line
+	ldy     #$04
+	cmp     (sp),y
+	bcc     L0009
 ;
-; if (++briefing_delay < 2) return; // Lower = faster typing
+; typewriter_ended = 1;
 ;
-	inc     _briefing_delay
-	lda     _briefing_delay
+	lda     #$01
+	sta     _typewriter_ended
+;
+; return;
+;
+	jmp     incsp7
+;
+; if (++typewriter_delay < 2) return; // Lower = faster typing
+;
+L0009:	inc     _typewriter_delay
+	lda     _typewriter_delay
 	cmp     #$02
 	bcc     L0005
 ;
-; briefing_delay = 0;
+; typewriter_delay = 0;
 ;
 	lda     #$00
-	sta     _briefing_delay
+	sta     _typewriter_delay
 ;
-; if (current[briefing_char] != '\0') {
+; if (current[typewriter_char] != '\0') {
 ;
-	ldy     #$03
+	dey
 	lda     (sp),y
 	tax
 	dey
 	lda     (sp),y
-	ldy     _briefing_char
+	ldy     _typewriter_char
 	sta     ptr1
 	stx     ptr1+1
 	lda     (ptr1),y
-	beq     L0009
+	beq     L000A
 ;
-; one_vram_buffer(current[briefing_char], NTADR_A(x + briefing_char, y));
+; one_vram_buffer(current[typewriter_char], NTADR_A(x + typewriter_char, y));
 ;
 	ldy     #$03
 	lda     (sp),y
 	tax
 	dey
 	lda     (sp),y
-	ldy     _briefing_char
+	ldy     _typewriter_char
 	sta     ptr1
 	stx     ptr1+1
 	lda     (ptr1),y
@@ -220,7 +321,7 @@ S0010:
 	iny
 	lda     (sp),y
 	clc
-	adc     _briefing_char
+	adc     _typewriter_char
 	bcc     L0008
 	inx
 L0008:	ora     ptr1
@@ -236,46 +337,55 @@ L0008:	ora     ptr1
 	pla
 	jsr     _one_vram_buffer
 ;
-; briefing_char++;
+; typewriter_char++;
 ;
-	inc     _briefing_char
+	inc     _typewriter_char
 ;
 ; } else {
 ;
-	jmp     incsp4
+	jmp     incsp7
 ;
-; briefing_line++;
+; typewriter_line++;
 ;
-L0009:	inc     _briefing_line
+L000A:	inc     _typewriter_line
 ;
-; briefing_char = 0;
+; typewriter_char = 0;
 ;
-	sta     _briefing_char
+	sta     _typewriter_char
 ;
 ; }
 ;
-L0005:	jmp     incsp4
+L0005:	jmp     incsp7
 
 .endproc
 
 ; ---------------------------------------------------------------
-; unsigned char __near__ is_briefing_done (void)
+; void __near__ typewriter_reset (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_is_briefing_done: near
+.proc	_typewriter_reset: near
 
 .segment	"CODE"
 
 ;
-; return (briefing_line >= NUM_BRIEFING_LINES);
+; typewriter_ended = 0;
 ;
-	lda     _briefing_line
-	cmp     #$09
 	lda     #$00
-	rol     a
-	ldx     #$00
+	sta     _typewriter_ended
+;
+; typewriter_line = 0;
+;
+	sta     _typewriter_line
+;
+; typewriter_char = 0;
+;
+	sta     _typewriter_char
+;
+; typewriter_step = 0;
+;
+	sta     _typewriter_step
 ;
 ; }
 ;
@@ -284,7 +394,7 @@ L0005:	jmp     incsp4
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ mission_begin_text (void)
+; void __near__ mission_begin_text (unsigned char level_num)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
@@ -294,147 +404,216 @@ L0005:	jmp     incsp4
 .segment	"CODE"
 
 ;
+; void mission_begin_text(unsigned char level_num) {
+;
+	jsr     pusha
+;
+; if (level_num == 1) {
+;
+	ldy     #$00
+	lda     (sp),y
+	cmp     #$01
+	jne     L0006
+;
 ; if (selected_crewmate == 0) {
 ;
 	lda     _selected_crewmate
-	bne     L0007
+	bne     L0008
 ;
-; WRITE("ZARNELLA:", 11, 10);
+; WRITE("ZARNELLA:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S000A)
-	ldy     #$01
+	lda     #<(S0017)
+	iny
 	sta     (sp),y
 	iny
-	lda     #>(S000A)
+	lda     #>(S0017)
 	sta     (sp),y
 	lda     #$09
 	ldy     #$00
 	sta     (sp),y
-	ldx     #$21
-	lda     #$4B
+	ldx     #$20
+	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; WRITE("IF YOU GET ME KILLED,", 5, 13);
+; show_typewriter(zarnella_lv1_start, 3);
 ;
-	jsr     decsp3
-	lda     #<(S000C)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S000C)
-	sta     (sp),y
-	lda     #$15
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$A5
-	jsr     _multi_vram_buffer_horz
-;
-; WRITE("I'LL HAUNT YOU PERSONALLY", 3, 15);
-;
-	jsr     decsp3
-	lda     #<(S000E)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S000E)
-	sta     (sp),y
-	lda     #$19
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$E3
+	lda     #<(_zarnella_lv1_start)
+	ldx     #>(_zarnella_lv1_start)
+	jsr     pushax
+	lda     #$03
 ;
 ; else if (selected_crewmate == 1) {
 ;
-	jmp     _multi_vram_buffer_horz
-L0007:	lda     _selected_crewmate
+	jmp     L0007
+L0008:	lda     _selected_crewmate
 	cmp     #$01
-	bne     L0004
+	bne     L0005
 ;
-; WRITE("LUMA-6:", 12, 10);
+; WRITE("LUMA-6:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S0010)
-	ldy     #$01
+	lda     #<(S0019)
+	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0010)
+	lda     #>(S0019)
 	sta     (sp),y
 	lda     #$07
 	ldy     #$00
 	sta     (sp),y
-	ldx     #$21
-	lda     #$4C
+	ldx     #$20
+	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; WRITE("TACTICAL SYSTEMS GREEN -", 4, 13);
+; show_typewriter(luma_lv1_start, 3);
 ;
-	jsr     decsp3
-	lda     #<(S0012)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S0012)
-	sta     (sp),y
-	lda     #$18
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$A4
-	jsr     _multi_vram_buffer_horz
-;
-; WRITE("LET'S MAKE THIS EFFICIENT", 3, 15);
-;
-	jsr     decsp3
-	lda     #<(S0014)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S0014)
-	sta     (sp),y
-	lda     #$19
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$E3
+	lda     #<(_luma_lv1_start)
+	ldx     #>(_luma_lv1_start)
+	jsr     pushax
+	lda     #$03
 ;
 ; else {
 ;
-	jmp     _multi_vram_buffer_horz
+	jmp     L0007
 ;
-; WRITE("MR BUBBLES:", 11, 10);
+; WRITE("MR. BUBBLES:", 10, 6);
 ;
-L0004:	jsr     decsp3
-	lda     #<(S0016)
-	ldy     #$01
+L0005:	jsr     decsp3
+	lda     #<(S001B)
+	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0016)
+	lda     #>(S001B)
 	sta     (sp),y
-	lda     #$0B
+	lda     #$0C
 	ldy     #$00
 	sta     (sp),y
-	ldx     #$21
-	lda     #$4B
+	ldx     #$20
+	lda     #$CA
 	jsr     _multi_vram_buffer_horz
 ;
-; WRITE("BUBBLE MODE ENGAGED!", 6, 13);
+; show_typewriter(bubbles_lv1_start, 2);
+;
+	lda     #<(_bubbles_lv1_start)
+	ldx     #>(_bubbles_lv1_start)
+	jsr     pushax
+	lda     #$02
+L0007:	jsr     _show_typewriter
+;
+; }
+;
+L0006:	jmp     incsp1
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ mission_end_text (unsigned char level_num)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_mission_end_text: near
+
+.segment	"CODE"
+
+;
+; void mission_end_text(unsigned char level_num) {
+;
+	jsr     pusha
+;
+; if (level_num == 1) {
+;
+	ldy     #$00
+	lda     (sp),y
+	cmp     #$01
+	bne     L0006
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L0008
+;
+; WRITE("ZARNELLA:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S0018)
-	ldy     #$01
+	lda     #<(S001D)
+	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0018)
+	lda     #>(S001D)
 	sta     (sp),y
-	lda     #$14
+	lda     #$09
 	ldy     #$00
 	sta     (sp),y
-	ldx     #$21
-	lda     #$A6
-	jmp     _multi_vram_buffer_horz
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_lv1_end, 2);
+;
+	lda     #<(_zarnella_lv1_end)
+	ldx     #>(_zarnella_lv1_end)
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L000A
+L0008:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L0005
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S001F)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S001F)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_lv1_end, 2);
+;
+	lda     #<(_luma_lv1_end)
+	ldx     #>(_luma_lv1_end)
+;
+; else {
+;
+	jmp     L000A
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L0005:	jsr     decsp3
+	lda     #<(S0021)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S0021)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_lv1_end, 2);
+;
+	lda     #<(_bubbles_lv1_end)
+	ldx     #>(_bubbles_lv1_end)
+L000A:	jsr     pushax
+	lda     #$02
+	jsr     _show_typewriter
+;
+; }
+;
+L0006:	jmp     incsp1
 
 .endproc
 

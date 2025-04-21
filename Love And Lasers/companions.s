@@ -12,7 +12,7 @@
 	.macpack	longbranch
 	.export		_update_arrow
 	.export		_draw_crewmate_menu
-	.export		_crewmate_confirm_text
+	.export		_resting_companion_text
 	.export		_handle_selection_arrow
 	.export		_update_ability_cooldown
 	.export		_start_ability_cooldown
@@ -25,6 +25,7 @@
 	.import		_i
 	.import		_j
 	.import		_selected_crewmate
+	.import		_previous_crewmate
 	.import		_ability_ready
 	.import		_ability_cooldown_timer
 	.import		_pad1
@@ -36,6 +37,7 @@
 	.import		_player_y
 	.import		_player_score
 	.import		_special_bullet_sprite
+	.import		_display_blinking_message
 	.import		_enemy_x
 	.import		_enemy_y
 	.import		_enemy_active
@@ -44,26 +46,17 @@
 
 .segment	"RODATA"
 
-S0011:
-	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$57,$55,$42,$42
-	.byte	$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$21,$00
-S000B:
-	.byte	$4C,$55,$4D,$41,$2D,$36,$3A,$20,$55,$50,$4C,$4F,$41,$44,$49,$4E
-	.byte	$47,$20,$4D,$49,$53,$53,$49,$4F,$4E,$00
-S000F:
-	.byte	$4D,$52,$20,$42,$55,$42,$42,$4C,$45,$53,$3A,$20,$57,$55,$42,$42
-	.byte	$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$00
-S0009:
-	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$44,$4F,$57,$4E,$2C,$20
-	.byte	$4D,$45,$41,$54,$42,$41,$47,$2E,$00
 S0007:
-	.byte	$5A,$41,$52,$4E,$45,$4C,$4C,$41,$3A,$20,$44,$4F,$4E,$27,$54,$20
-	.byte	$53,$4C,$4F,$57,$20,$4D,$45,$00
-S000D:
-	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$50,$52,$4F,$54,$4F,$43,$4F,$4C
-	.byte	$53,$2E,$00
+	.byte	$4F,$55,$54,$20,$48,$55,$4E,$54,$49,$4E,$47,$20,$53,$50,$41,$43
+	.byte	$45,$20,$57,$49,$54,$43,$48,$45,$53,$00
+S0009:
+	.byte	$52,$45,$43,$48,$41,$52,$47,$49,$4E,$47,$20,$54,$41,$43,$54,$49
+	.byte	$43,$41,$4C,$20,$43,$4F,$52,$45,$00
+S000B:
+	.byte	$42,$55,$42,$42,$4C,$49,$4E,$47,$20,$49,$4E,$20,$54,$48,$45,$20
+	.byte	$44,$41,$52,$4B,$00
 S0005:
-	.byte	$4D,$52,$20,$42,$55,$42,$42,$4C,$45,$53,$00
+	.byte	$4D,$52,$2E,$20,$42,$55,$42,$42,$4C,$45,$53,$00
 S0001:
 	.byte	$5A,$41,$52,$4E,$45,$4C,$4C,$41,$00
 S0003:
@@ -80,20 +73,20 @@ S0003:
 .segment	"CODE"
 
 ;
-; int arrow_addr = NTADR_A(8, 11 + selected_crewmate * 4);
+; int arrow_addr = NTADR_A(6, 10 + selected_crewmate * 6);
 ;
 	ldx     #$00
 	lda     _selected_crewmate
-	jsr     shlax2
+	jsr     mulax6
 	clc
-	adc     #$0B
+	adc     #$0A
 	bcc     L0002
 	inx
 L0002:	jsr     aslax4
 	stx     tmp1
 	asl     a
 	rol     tmp1
-	ora     #$08
+	ora     #$06
 	pha
 	lda     tmp1
 	ora     #$20
@@ -129,7 +122,7 @@ L0002:	jsr     aslax4
 .segment	"CODE"
 
 ;
-; WRITE("ZARNELLA", 10, 11);
+; WRITE("ZARNELLA", 11, 10);
 ;
 	jsr     decsp3
 	lda     #<(S0001)
@@ -142,10 +135,10 @@ L0002:	jsr     aslax4
 	ldy     #$00
 	sta     (sp),y
 	ldx     #$21
-	lda     #$6A
+	lda     #$4B
 	jsr     _multi_vram_buffer_horz
 ;
-; WRITE("LUMA-6", 10, 15);
+; WRITE("LUMA-6", 12, 16);
 ;
 	jsr     decsp3
 	lda     #<(S0003)
@@ -157,11 +150,11 @@ L0002:	jsr     aslax4
 	lda     #$06
 	ldy     #$00
 	sta     (sp),y
-	ldx     #$21
-	lda     #$EA
+	ldx     #$22
+	lda     #$0C
 	jsr     _multi_vram_buffer_horz
 ;
-; WRITE("MR BUBBLES", 10, 19);
+; WRITE("MR. BUBBLES", 10, 22);
 ;
 	jsr     decsp3
 	lda     #<(S0005)
@@ -170,127 +163,100 @@ L0002:	jsr     aslax4
 	iny
 	lda     #>(S0005)
 	sta     (sp),y
-	lda     #$0A
+	lda     #$0B
 	ldy     #$00
 	sta     (sp),y
 	ldx     #$22
-	lda     #$6A
+	lda     #$CA
 	jmp     _multi_vram_buffer_horz
 
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ crewmate_confirm_text (void)
+; void __near__ resting_companion_text (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_crewmate_confirm_text: near
+.proc	_resting_companion_text: near
 
 .segment	"CODE"
 
 ;
-; if (selected_crewmate == 0) {
+; if (previous_crewmate == 0) {
 ;
-	lda     _selected_crewmate
-	bne     L0007
+	lda     _previous_crewmate
+	bne     L0005
 ;
-; WRITE("ZARNELLA: DON'T SLOW ME", 2, 12);
+; BLINK_MSG("OUT HUNTING SPACE WITCHES", 3, 12);
 ;
-	jsr     decsp3
+	jsr     decsp4
 	lda     #<(S0007)
-	ldy     #$01
+	ldy     #$02
 	sta     (sp),y
 	iny
 	lda     #>(S0007)
 	sta     (sp),y
-	lda     #$17
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$82
-	jsr     _multi_vram_buffer_horz
-;
-; WRITE("          DOWN, MEATBAG.", 2, 14);
-;
-	jsr     decsp3
-	lda     #<(S0009)
+	lda     #$19
 	ldy     #$01
+	sta     (sp),y
+	lda     #$03
+	dey
+	sta     (sp),y
+	lda     #$0C
+	jsr     _display_blinking_message
+;
+; if (previous_crewmate == 1) {
+;
+L0005:	lda     _previous_crewmate
+	cmp     #$01
+	bne     L0006
+;
+; BLINK_MSG("RECHARGING TACTICAL CORE", 4, 18);
+;
+	jsr     decsp4
+	lda     #<(S0009)
+	ldy     #$02
 	sta     (sp),y
 	iny
 	lda     #>(S0009)
 	sta     (sp),y
 	lda     #$18
+	ldy     #$01
+	sta     (sp),y
+	lda     #$04
+	dey
+	sta     (sp),y
+	lda     #$12
+	jsr     _display_blinking_message
 ;
-; else if (selected_crewmate == 1) {
+; if (previous_crewmate == 2) {
 ;
-	jmp     L000B
-L0007:	lda     _selected_crewmate
-	cmp     #$01
+L0006:	lda     _previous_crewmate
+	cmp     #$02
 	bne     L0004
 ;
-; WRITE("LUMA-6: UPLOADING MISSION", 2, 12);
+; BLINK_MSG("BUBBLING IN THE DARK", 6, 24);
 ;
-	jsr     decsp3
+	jsr     decsp4
 	lda     #<(S000B)
-	ldy     #$01
+	ldy     #$02
 	sta     (sp),y
 	iny
 	lda     #>(S000B)
 	sta     (sp),y
-	lda     #$19
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$82
-	jsr     _multi_vram_buffer_horz
-;
-; WRITE("        PROTOCOLS.", 2, 14);
-;
-	jsr     decsp3
-	lda     #<(S000D)
+	lda     #$14
 	ldy     #$01
 	sta     (sp),y
-	iny
-	lda     #>(S000D)
+	lda     #$06
+	dey
 	sta     (sp),y
-	lda     #$12
+	lda     #$18
+	jmp     _display_blinking_message
 ;
-; else {
+; }
 ;
-	jmp     L000B
-;
-; WRITE("MR BUBBLES: WUBBLE WUBBLE", 2, 12);
-;
-L0004:	jsr     decsp3
-	lda     #<(S000F)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S000F)
-	sta     (sp),y
-	lda     #$19
-	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$82
-	jsr     _multi_vram_buffer_horz
-;
-; WRITE("            WUBBLE WUBBLE!", 2, 14);
-;
-	jsr     decsp3
-	lda     #<(S0011)
-	ldy     #$01
-	sta     (sp),y
-	iny
-	lda     #>(S0011)
-	sta     (sp),y
-	lda     #$1A
-L000B:	ldy     #$00
-	sta     (sp),y
-	ldx     #$21
-	lda     #$C2
-	jmp     _multi_vram_buffer_horz
+L0004:	rts
 
 .endproc
 
@@ -309,48 +275,66 @@ L000B:	ldy     #$00
 ;
 	lda     _pad1
 	and     #$04
-	beq     L0010
+	beq     L001F
 	lda     _pad1_old
 	and     #$04
-	bne     L0010
+	bne     L001F
 ;
-; selected_crewmate++;
+; selected_crewmate = (selected_crewmate + 1) % 3;
 ;
-	inc     _selected_crewmate
+	tax
+L001D:	lda     _selected_crewmate
+	clc
+	adc     #$01
+	bcc     L0009
+	inx
+L0009:	jsr     pushax
+	ldx     #$00
+	lda     #$03
+	jsr     tosmoda0
+	sta     _selected_crewmate
 ;
-; if (selected_crewmate > 2) selected_crewmate = 0;
+; } while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
 ;
 	lda     _selected_crewmate
-	cmp     #$03
-	bcc     L0010
-	lda     #$00
-	sta     _selected_crewmate
+	jsr     pusha0
+	lda     _previous_crewmate
+	jsr     tosicmp0
+	bne     L001F
+	ldx     #$00
+	lda     _previous_crewmate
+	cmp     #$FF
+	bne     L001D
 ;
 ; if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
 ;
-L0010:	lda     _pad1
+L001F:	lda     _pad1
 	and     #$08
-	beq     L0012
+	beq     L0021
 	lda     _pad1_old
 	and     #$08
-	beq     L0013
-L0012:	rts
+	beq     L0023
+L0021:	rts
 ;
-; if (selected_crewmate == 0) selected_crewmate = 2;
+; selected_crewmate = (selected_crewmate == 0) ? 2 : selected_crewmate - 1;
 ;
-L0013:	lda     _selected_crewmate
-	bne     L0014
+L0023:	lda     _selected_crewmate
+	bne     L0024
 	lda     #$02
-	sta     _selected_crewmate
+	jmp     L0025
+L0024:	lda     _selected_crewmate
+	sec
+	sbc     #$01
+L0025:	sta     _selected_crewmate
 ;
-; else selected_crewmate--;
+; } while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
 ;
-	rts
-L0014:	dec     _selected_crewmate
-;
-; }
-;
-	rts
+	cmp     _previous_crewmate
+	bne     L0026
+	lda     _previous_crewmate
+	cmp     #$FF
+	bne     L0023
+L0026:	rts
 
 .endproc
 

@@ -14,8 +14,8 @@
 	.export		_current_level
 	.export		_i
 	.export		_j
-	.export		_briefing_step
 	.export		_selected_crewmate
+	.export		_previous_crewmate
 	.export		_shmup_screen_drawn
 	.export		_shmup_started
 	.export		_dialogue_shown
@@ -41,7 +41,9 @@
 	.export		_score_string
 	.export		_shmup_timer
 	.export		_timer_string
-	.export		_briefing_line
+	.export		_typewriter_step
+	.export		_typewriter_line
+	.export		_typewriter_ended
 	.export		_briefing_started
 	.export		_bullet_box
 	.export		_enemy_box
@@ -54,17 +56,17 @@
 .segment	"DATA"
 
 _game_state:
-	.byte	$00
+	.byte	$02
 _current_level:
 	.byte	$01
 _i:
 	.byte	$00
 _j:
 	.byte	$00
-_briefing_step:
-	.byte	$00
 _selected_crewmate:
 	.byte	$00
+_previous_crewmate:
+	.byte	$FF
 _shmup_screen_drawn:
 	.byte	$00
 _shmup_started:
@@ -103,7 +105,11 @@ _shmup_timer:
 	.word	$1518
 _timer_string:
 	.byte	$54,$49,$4D,$45,$52,$3A,$20,$39,$30,$00
-_briefing_line:
+_typewriter_step:
+	.byte	$00
+_typewriter_line:
+	.byte	$00
+_typewriter_ended:
 	.byte	$00
 _briefing_started:
 	.byte	$00

@@ -120,7 +120,7 @@
 ;
 ; game_state = STATE_DIALOGUE;
 ;
-	lda     #$05
+	lda     #$04
 	sta     _game_state
 ;
 ; }
@@ -195,7 +195,7 @@
 ;
 ; game_state = STATE_GAME_OVER;
 ;
-	lda     #$07
+	lda     #$06
 	sta     _game_state
 ;
 ; ppu_on_all();
