@@ -20,6 +20,30 @@ extern const DialogueLine zarnella_lv1_end[];
 extern const DialogueLine luma_lv1_end[];
 extern const DialogueLine bubbles_lv1_end[];
 
+extern const DialogueLine zarnella_lv2_start[];
+extern const DialogueLine luma_lv2_start[];
+extern const DialogueLine bubbles_lv2_start[];
+
+extern const DialogueLine zarnella_lv2_end[];
+extern const DialogueLine luma_lv2_end[];
+extern const DialogueLine bubbles_lv2_end[];
+
+extern const DialogueLine zarnella_lv3_start[];
+extern const DialogueLine luma_lv3_start[];
+extern const DialogueLine bubbles_lv3_start[];
+
+extern const DialogueLine zarnella_lv3_end[];
+extern const DialogueLine luma_lv3_end[];
+extern const DialogueLine bubbles_lv3_end[];
+
+extern const DialogueLine zarnella_boss_start[];
+extern const DialogueLine luma_boss_start[];
+extern const DialogueLine bubbles_boss_start[];
+
+extern const DialogueLine zarnella_boss_end[];
+extern const DialogueLine luma_boss_end[];
+extern const DialogueLine bubbles_boss_end[];
+
 void show_typewriter(const DialogueLine* lines, unsigned char line_count);
 void typewriter_reset(void);
 

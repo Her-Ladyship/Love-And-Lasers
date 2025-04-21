@@ -3,7 +3,7 @@
 
 // === GLOBAL VARIABLES ===
 
-unsigned char game_state = STATE_SELECT_CREWMATE;
+unsigned char game_state = STATE_TITLE;
 unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;

@@ -205,7 +205,7 @@ void main(void) {
 			mission_end_text(current_level - 1);
 
 			if (typewriter_ended) {
-				BLINK_MSG("PRESS A TO CONTINUE", 6, 24);
+				BLINK_MSG("PRESS A TO CONTINUE", 7, 24);
 			}
 
 			if ((pad1 & PAD_A) && !(pad1_old & PAD_A) && typewriter_ended) {
@@ -223,6 +223,9 @@ void main(void) {
 				
 				game_state = STATE_SELECT_CREWMATE;
 				ppu_on_all();
+				if (current_level >= 5) {
+					game_state = STATE_ENDING;
+				}
 			}
 		}
 		else if (game_state == STATE_ENDING) {

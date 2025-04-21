@@ -56,7 +56,7 @@
 .segment	"DATA"
 
 _game_state:
-	.byte	$02
+	.byte	$00
 _current_level:
 	.byte	$01
 _i:

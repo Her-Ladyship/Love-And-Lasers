@@ -18,6 +18,24 @@
 	.export		_zarnella_lv1_end
 	.export		_luma_lv1_end
 	.export		_bubbles_lv1_end
+	.export		_zarnella_lv2_start
+	.export		_luma_lv2_start
+	.export		_bubbles_lv2_start
+	.export		_zarnella_lv2_end
+	.export		_luma_lv2_end
+	.export		_bubbles_lv2_end
+	.export		_zarnella_lv3_start
+	.export		_luma_lv3_start
+	.export		_bubbles_lv3_start
+	.export		_zarnella_lv3_end
+	.export		_luma_lv3_end
+	.export		_bubbles_lv3_end
+	.export		_zarnella_boss_start
+	.export		_luma_boss_start
+	.export		_bubbles_boss_start
+	.export		_zarnella_boss_end
+	.export		_luma_boss_end
+	.export		_bubbles_boss_end
 	.export		_show_typewriter
 	.export		_typewriter_reset
 	.export		_mission_begin_text
@@ -74,118 +92,911 @@ _zarnella_lv1_start:
 	.addr	S000B
 	.byte	$03
 	.byte	$11
-_luma_lv1_start:
 	.addr	S000C
+	.byte	$00
+	.byte	$13
+_luma_lv1_start:
+	.addr	S000D
 	.byte	$02
 	.byte	$0B
-	.addr	S000D
+	.addr	S000E
 	.byte	$04
 	.byte	$0F
-	.addr	S000E
+	.addr	S000F
 	.byte	$03
 	.byte	$11
-_bubbles_lv1_start:
-	.addr	S000F
-	.byte	$02
-	.byte	$0B
 	.addr	S0010
-	.byte	$06
-	.byte	$0F
-_zarnella_lv1_end:
+	.byte	$00
+	.byte	$13
+_bubbles_lv1_start:
 	.addr	S0011
 	.byte	$02
 	.byte	$0B
 	.addr	S0012
+	.byte	$06
+	.byte	$0F
+	.addr	S0013
+	.byte	$00
+	.byte	$11
+_zarnella_lv1_end:
+	.addr	S0014
+	.byte	$02
+	.byte	$0B
+	.addr	S0015
 	.byte	$05
 	.byte	$0F
+	.addr	S0016
+	.byte	$00
+	.byte	$11
 _luma_lv1_end:
-	.addr	S0013
+	.addr	S0017
 	.byte	$03
 	.byte	$0B
-	.addr	S0014
+	.addr	S0018
 	.byte	$05
 	.byte	$0F
+	.addr	S0019
+	.byte	$00
+	.byte	$11
 _bubbles_lv1_end:
-	.addr	S0015
+	.addr	S001A
 	.byte	$04
 	.byte	$0B
-	.addr	S0016
+	.addr	S001B
 	.byte	$0B
 	.byte	$0F
+	.addr	S001C
+	.byte	$00
+	.byte	$11
+_zarnella_lv2_start:
+	.addr	S001D
+	.byte	$01
+	.byte	$0B
+	.addr	S001E
+	.byte	$02
+	.byte	$0D
+	.addr	S001F
+	.byte	$00
+	.byte	$0F
+	.addr	S0020
+	.byte	$0A
+	.byte	$11
+	.addr	S0021
+	.byte	$06
+	.byte	$13
+	.addr	S0022
+	.byte	$00
+	.byte	$0F
+_luma_lv2_start:
+	.addr	S0023
+	.byte	$01
+	.byte	$0B
+	.addr	S0024
+	.byte	$01
+	.byte	$0D
+	.addr	S0025
+	.byte	$00
+	.byte	$0F
+	.addr	S0026
+	.byte	$09
+	.byte	$11
+	.addr	S0027
+	.byte	$04
+	.byte	$13
+	.addr	S0028
+	.byte	$00
+	.byte	$0F
+_bubbles_lv2_start:
+	.addr	S0029
+	.byte	$02
+	.byte	$0B
+	.addr	S002A
+	.byte	$02
+	.byte	$0D
+	.addr	S002B
+	.byte	$09
+	.byte	$0F
+	.addr	S002C
+	.byte	$00
+	.byte	$11
+	.addr	S002D
+	.byte	$02
+	.byte	$13
+	.addr	S002E
+	.byte	$00
+	.byte	$11
+_zarnella_lv2_end:
+	.addr	S002F
+	.byte	$05
+	.byte	$0B
+	.addr	S0030
+	.byte	$07
+	.byte	$0D
+	.addr	S0031
+	.byte	$05
+	.byte	$0F
+	.addr	S0032
+	.byte	$00
+	.byte	$11
+	.addr	S0033
+	.byte	$07
+	.byte	$13
+	.addr	S0034
+	.byte	$00
+	.byte	$11
+_luma_lv2_end:
+	.addr	S0035
+	.byte	$08
+	.byte	$0A
+	.addr	S0036
+	.byte	$08
+	.byte	$0C
+	.addr	S0037
+	.byte	$08
+	.byte	$0E
+	.addr	S0038
+	.byte	$00
+	.byte	$10
+	.addr	S0039
+	.byte	$06
+	.byte	$12
+	.addr	S003A
+	.byte	$00
+	.byte	$10
+	.addr	S003B
+	.byte	$0B
+	.byte	$14
+	.addr	S003C
+	.byte	$00
+	.byte	$10
+_bubbles_lv2_end:
+	.addr	S003D
+	.byte	$07
+	.byte	$0B
+	.addr	S003E
+	.byte	$0A
+	.byte	$0D
+	.addr	S003F
+	.byte	$06
+	.byte	$0F
+	.addr	S0040
+	.byte	$00
+	.byte	$11
+	.addr	S0041
+	.byte	$01
+	.byte	$13
+	.addr	S0042
+	.byte	$00
+	.byte	$11
+_zarnella_lv3_start:
+	.addr	S0043
+	.byte	$08
+	.byte	$0B
+	.addr	S0044
+	.byte	$09
+	.byte	$0D
+	.addr	S0045
+	.byte	$07
+	.byte	$0F
+	.addr	S0046
+	.byte	$00
+	.byte	$11
+	.addr	S0047
+	.byte	$02
+	.byte	$13
+	.addr	S0048
+	.byte	$00
+	.byte	$11
+	.addr	S0049
+	.byte	$15
+	.byte	$13
+	.addr	S004A
+	.byte	$00
+	.byte	$11
+_luma_lv3_start:
+	.addr	S004B
+	.byte	$03
+	.byte	$0B
+	.addr	S004C
+	.byte	$06
+	.byte	$0D
+	.addr	S004D
+	.byte	$02
+	.byte	$0F
+	.addr	S004E
+	.byte	$07
+	.byte	$11
+	.addr	S004F
+	.byte	$00
+	.byte	$13
+_bubbles_lv3_start:
+	.addr	S0050
+	.byte	$04
+	.byte	$0B
+	.addr	S0051
+	.byte	$05
+	.byte	$0D
+	.addr	S0052
+	.byte	$00
+	.byte	$0F
+	.addr	S0053
+	.byte	$03
+	.byte	$11
+	.addr	S0054
+	.byte	$00
+	.byte	$0F
+_zarnella_lv3_end:
+	.addr	S0055
+	.byte	$01
+	.byte	$0A
+	.addr	S0056
+	.byte	$00
+	.byte	$10
+	.addr	S0057
+	.byte	$09
+	.byte	$0C
+	.addr	S0058
+	.byte	$00
+	.byte	$10
+	.addr	S0059
+	.byte	$10
+	.byte	$0C
+	.addr	S005A
+	.byte	$00
+	.byte	$10
+	.addr	S005B
+	.byte	$05
+	.byte	$0E
+	.addr	S005C
+	.byte	$00
+	.byte	$10
+	.addr	S005D
+	.byte	$06
+	.byte	$12
+	.addr	S005E
+	.byte	$08
+	.byte	$14
+	.addr	S005F
+	.byte	$00
+	.byte	$10
+_luma_lv3_end:
+	.addr	S0060
+	.byte	$01
+	.byte	$0B
+	.addr	S0061
+	.byte	$00
+	.byte	$0F
+	.addr	S0062
+	.byte	$0B
+	.byte	$0B
+	.addr	S0063
+	.byte	$00
+	.byte	$0F
+	.addr	S0064
+	.byte	$02
+	.byte	$0D
+	.addr	S0065
+	.byte	$00
+	.byte	$0F
+	.addr	S0066
+	.byte	$0D
+	.byte	$0D
+	.addr	S0067
+	.byte	$00
+	.byte	$0F
+	.addr	S0068
+	.byte	$01
+	.byte	$11
+	.addr	S0069
+	.byte	$00
+	.byte	$0F
+	.addr	S006A
+	.byte	$0D
+	.byte	$11
+	.addr	S006B
+	.byte	$00
+	.byte	$0F
+_bubbles_lv3_end:
+	.addr	S006C
+	.byte	$01
+	.byte	$0B
+	.addr	S006D
+	.byte	$00
+	.byte	$0F
+	.addr	S006E
+	.byte	$14
+	.byte	$0B
+	.addr	S006F
+	.byte	$00
+	.byte	$0F
+	.addr	S0070
+	.byte	$02
+	.byte	$0D
+	.addr	S0071
+	.byte	$00
+	.byte	$0F
+	.addr	S0072
+	.byte	$04
+	.byte	$11
+	.addr	S0073
+	.byte	$00
+	.byte	$0F
+	.addr	S0074
+	.byte	$0A
+	.byte	$13
+	.addr	S0075
+	.byte	$00
+	.byte	$0F
+_zarnella_boss_start:
+	.addr	S0076
+	.byte	$0B
+	.byte	$09
+	.addr	S0077
+	.byte	$00
+	.byte	$0D
+	.addr	S0078
+	.byte	$06
+	.byte	$0B
+	.addr	S0079
+	.byte	$00
+	.byte	$0D
+	.addr	S007A
+	.byte	$07
+	.byte	$0F
+	.addr	S007B
+	.byte	$07
+	.byte	$11
+	.addr	S007C
+	.byte	$00
+	.byte	$0D
+	.addr	S007D
+	.byte	$02
+	.byte	$14
+	.addr	S007E
+	.byte	$00
+	.byte	$0D
+_luma_boss_start:
+	.addr	S007F
+	.byte	$02
+	.byte	$0B
+	.addr	S0080
+	.byte	$00
+	.byte	$0F
+	.addr	S0081
+	.byte	$01
+	.byte	$0D
+	.addr	S0082
+	.byte	$00
+	.byte	$0F
+	.addr	S0083
+	.byte	$17
+	.byte	$0D
+	.addr	S0084
+	.byte	$00
+	.byte	$0F
+	.addr	S0085
+	.byte	$04
+	.byte	$11
+	.addr	S0086
+	.byte	$05
+	.byte	$13
+	.addr	S0087
+	.byte	$00
+	.byte	$0F
+_bubbles_boss_start:
+	.addr	S0088
+	.byte	$06
+	.byte	$09
+	.addr	S0089
+	.byte	$08
+	.byte	$0B
+	.addr	S008A
+	.byte	$00
+	.byte	$0D
+	.addr	S008B
+	.byte	$06
+	.byte	$0F
+	.addr	S008C
+	.byte	$00
+	.byte	$0D
+	.addr	S008D
+	.byte	$13
+	.byte	$0F
+	.addr	S008E
+	.byte	$00
+	.byte	$0D
+	.addr	S008F
+	.byte	$08
+	.byte	$11
+	.addr	S0090
+	.byte	$00
+	.byte	$0D
+	.addr	S0091
+	.byte	$03
+	.byte	$15
+	.addr	S0092
+	.byte	$00
+	.byte	$0D
+_zarnella_boss_end:
+	.addr	S0093
+	.byte	$02
+	.byte	$0B
+	.addr	S0094
+	.byte	$00
+	.byte	$0F
+	.addr	S0095
+	.byte	$03
+	.byte	$0D
+	.addr	S0096
+	.byte	$00
+	.byte	$0F
+	.addr	S0097
+	.byte	$07
+	.byte	$11
+	.addr	S0098
+	.byte	$05
+	.byte	$13
+	.addr	S0099
+	.byte	$00
+	.byte	$0F
+_luma_boss_end:
+	.addr	S009A
+	.byte	$04
+	.byte	$0B
+	.addr	S009B
+	.byte	$00
+	.byte	$0F
+	.addr	S009C
+	.byte	$0B
+	.byte	$0B
+	.addr	S009D
+	.byte	$0B
+	.byte	$0D
+	.addr	S009E
+	.byte	$00
+	.byte	$0F
+	.addr	S009F
+	.byte	$05
+	.byte	$11
+	.addr	S00A0
+	.byte	$00
+	.byte	$0F
+	.addr	S00A1
+	.byte	$10
+	.byte	$11
+	.addr	S00A2
+	.byte	$00
+	.byte	$0F
+	.addr	S00A3
+	.byte	$02
+	.byte	$13
+	.addr	S00A4
+	.byte	$00
+	.byte	$0F
+	.addr	S00A5
+	.byte	$06
+	.byte	$13
+	.addr	S00A6
+	.byte	$00
+	.byte	$0F
+_bubbles_boss_end:
+	.addr	S00A7
+	.byte	$03
+	.byte	$09
+	.addr	S00A8
+	.byte	$06
+	.byte	$0B
+	.addr	S00A9
+	.byte	$00
+	.byte	$0D
+	.addr	S00AA
+	.byte	$05
+	.byte	$0F
+	.addr	S00AB
+	.byte	$09
+	.byte	$11
+	.addr	S00AC
+	.byte	$00
+	.byte	$0D
+	.addr	S00AD
+	.byte	$08
+	.byte	$15
+	.addr	S00AE
+	.byte	$00
+	.byte	$0D
 S0004:
 	.byte	$4F,$55,$54,$50,$4F,$53,$54,$20,$44,$45,$4C,$54,$41,$2D,$5A,$55
 	.byte	$4C,$55,$2D,$37,$20,$57,$45,$4E,$54,$20,$44,$41,$52,$4B,$2E,$00
 S0008:
 	.byte	$59,$4F,$55,$27,$52,$45,$20,$4F,$55,$52,$20,$4F,$4E,$4C,$59,$20
 	.byte	$48,$4F,$50,$45,$2E,$20,$53,$4F,$52,$54,$20,$4F,$46,$2E,$00
-S0006:
-	.byte	$47,$4F,$20,$49,$4E,$20,$48,$41,$52,$44,$20,$41,$4E,$44,$20,$46
-	.byte	$49,$4E,$44,$20,$54,$48,$45,$20,$54,$52,$55,$54,$48,$2E,$00
+S0055:
+	.byte	$54,$48,$49,$53,$20,$46,$49,$47,$48,$54,$20,$57,$41,$53,$20,$41
+	.byte	$4C,$4D,$4F,$53,$54,$20,$57,$4F,$52,$54,$48,$20,$49,$54,$00
 S0005:
 	.byte	$50,$4F,$53,$53,$49,$42,$4C,$45,$20,$41,$49,$20,$47,$4F,$4E,$45
 	.byte	$20,$52,$4F,$47,$55,$45,$2E,$20,$41,$47,$41,$49,$4E,$2E,$00
+S0006:
+	.byte	$47,$4F,$20,$49,$4E,$20,$48,$41,$52,$44,$20,$41,$4E,$44,$20,$46
+	.byte	$49,$4E,$44,$20,$54,$48,$45,$20,$54,$52,$55,$54,$48,$2E,$00
 S0007:
 	.byte	$45,$58,$50,$4C,$4F,$53,$49,$4F,$4E,$53,$20,$4F,$50,$54,$49,$4F
 	.byte	$4E,$41,$4C,$20,$42,$55,$54,$20,$4C,$49,$4B,$45,$4C,$59,$00
-S0011:
+S0041:
+	.byte	$49,$27,$4D,$20,$47,$4F,$4E,$4E,$41,$20,$50,$4F,$50,$20,$46,$52
+	.byte	$4F,$4D,$20,$45,$58,$43,$49,$54,$45,$4D,$45,$4E,$54,$21,$00
+S00A9:
+	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+	.byte	$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$00
+S00A6	:=	S00A9+0
+S00A2	:=	S00A9+0
+S000C	:=	S00A9+0
+S009E	:=	S00A9+0
+S0099	:=	S00A9+0
+S0096	:=	S00A9+0
+S0010	:=	S00A9+0
+S0092	:=	S00A9+0
+S0090	:=	S00A9+0
+S0013	:=	S00A9+0
+S0014:
 	.byte	$57,$45,$4C,$4C,$2C,$20,$54,$48,$41,$54,$20,$57,$41,$53,$4E,$27
 	.byte	$54,$20,$2A,$54,$45,$52,$52,$49,$42,$4C,$45,$2A,$2E,$00
+S008E	:=	S00A9+0
+S0016	:=	S00A9+0
+S008C	:=	S00A9+0
+S008A	:=	S00A9+0
+S0019	:=	S00A9+0
+S0087	:=	S00A9+0
+S0084	:=	S00A9+0
+S001C	:=	S00A9+0
+S001D:
+	.byte	$54,$48,$45,$59,$20,$53,$45,$4E,$54,$20,$4D,$45,$20,$2A,$42,$41
+	.byte	$43,$4B,$2A,$20,$57,$49,$54,$48,$20,$59,$4F,$55,$3F,$00
+S0080	:=	S00A9+0
+S001F	:=	S00A9+0
+S007E	:=	S00A9+0
+S007D:
+	.byte	$4A,$55,$53,$54,$20,$54,$52,$59,$20,$54,$4F,$20,$4B,$45,$45,$50
+	.byte	$20,$55,$50,$2C,$20,$43,$41,$50,$54,$41,$49,$4E,$2E,$00
+S0022	:=	S00A9+0
+S0023:
+	.byte	$4C,$41,$53,$54,$20,$54,$45,$41,$4D,$2D,$55,$50,$3A,$20,$45,$46
+	.byte	$46,$49,$43,$49,$45,$4E,$43,$59,$20,$4C,$4F,$53,$53,$00
+S0024:
+	.byte	$4D,$49,$54,$49,$47,$41,$54,$49,$4E,$47,$20,$48,$55,$4D,$41,$4E
+	.byte	$20,$56,$41,$52,$49,$41,$42,$4C,$45,$53,$2E,$2E,$2E,$00
+S0025	:=	S00A9+0
+S007C	:=	S00A9+0
+S0079	:=	S00A9+0
+S0028	:=	S00A9+0
+S0075	:=	S00A9+0
+S0073	:=	S00A9+0
+S0071	:=	S00A9+0
+S002C	:=	S00A9+0
+S006F	:=	S00A9+0
+S002E	:=	S00A9+0
+S006D	:=	S00A9+0
+S006B	:=	S00A9+0
+S0069	:=	S00A9+0
+S0032	:=	S00A9+0
+S0067	:=	S00A9+0
+S0034	:=	S00A9+0
+S0063	:=	S00A9+0
+S005F	:=	S00A9+0
+S005C	:=	S00A9+0
+S0038	:=	S00A9+0
+S0056	:=	S00A9+0
+S003A	:=	S00A9+0
+S00AE	:=	S00A9+0
+S003C	:=	S00A9+0
+S0054	:=	S00A9+0
+S0052	:=	S00A9+0
+S004F	:=	S00A9+0
+S0040	:=	S00A9+0
+S00AC	:=	S00A9+0
+S0042	:=	S00A9+0
+S004A	:=	S00A9+0
+S0048	:=	S00A9+0
+S0046	:=	S00A9+0
 S0001:
 	.byte	$47,$41,$4C,$41,$43,$54,$49,$43,$20,$43,$4F,$4D,$4D,$41,$4E,$44
 	.byte	$20,$42,$4F,$4F,$54,$49,$4E,$47,$20,$55,$50,$2E,$2E,$00
+S0093:
+	.byte	$48,$41,$48,$21,$20,$4E,$4F,$57,$20,$2A,$54,$48,$41,$54,$2A,$20
+	.byte	$57,$41,$53,$20,$41,$20,$46,$49,$47,$48,$54,$2E,$00
+S0011:
+	.byte	$57,$55,$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$20,$57,$55
+	.byte	$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$21,$00
+S007F:
+	.byte	$41,$4C,$4C,$20,$50,$41,$54,$48,$53,$20,$4C,$45,$41,$44,$20,$54
+	.byte	$4F,$20,$54,$48,$49,$53,$20,$50,$4F,$49,$4E,$54,$00
 S0009:
 	.byte	$44,$4F,$4E,$27,$54,$20,$53,$4C,$4F,$57,$20,$4D,$45,$20,$44,$4F
 	.byte	$57,$4E,$2C,$20,$4D,$45,$41,$54,$42,$41,$47,$2E,$00
-S000F:
-	.byte	$57,$55,$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$20,$57,$55
-	.byte	$42,$42,$4C,$45,$20,$57,$55,$42,$42,$4C,$45,$21,$00
-S0013:
-	.byte	$4D,$49,$53,$53,$49,$4F,$4E,$20,$50,$41,$52,$41,$4D,$45,$54,$45
-	.byte	$52,$53,$20,$43,$4F,$4D,$50,$4C,$45,$54,$45,$00
-S000C:
+S004D:
+	.byte	$4C,$45,$54,$27,$53,$20,$46,$49,$4E,$49,$53,$48,$20,$54,$48,$49
+	.byte	$53,$20,$42,$45,$46,$4F,$52,$45,$20,$59,$4F,$55,$00
+S002D:
+	.byte	$4C,$45,$54,$27,$53,$20,$4D,$41,$4B,$45,$20,$54,$48,$45,$20,$44
+	.byte	$52,$45,$41,$4D,$20,$2A,$52,$45,$41,$4C,$2A,$2E,$00
+S001E:
+	.byte	$45,$49,$54,$48,$45,$52,$20,$49,$27,$4D,$20,$42,$45,$49,$4E,$47
+	.byte	$20,$50,$55,$4E,$49,$53,$48,$45,$44,$2E,$2E,$2E,$00
+S0070:
+	.byte	$45,$56,$45,$52,$59,$20,$42,$4C,$41,$53,$54,$20,$4D,$41,$44,$45
+	.byte	$20,$4D,$45,$20,$51,$55,$49,$56,$45,$52,$21,$00
+S000D:
 	.byte	$55,$50,$4C,$4F,$41,$44,$49,$4E,$47,$20,$4D,$49,$53,$53,$49,$4F
 	.byte	$4E,$20,$50,$52,$4F,$54,$4F,$43,$4F,$4C,$53,$00
+S0029:
+	.byte	$4C,$41,$53,$54,$20,$4E,$49,$47,$48,$54,$20,$49,$20,$44,$52,$45
+	.byte	$41,$4D,$54,$20,$4F,$46,$20,$59,$4F,$55,$2E,$00
+S0017:
+	.byte	$4D,$49,$53,$53,$49,$4F,$4E,$20,$50,$41,$52,$41,$4D,$45,$54,$45
+	.byte	$52,$53,$20,$43,$4F,$4D,$50,$4C,$45,$54,$45,$00
+S0091:
+	.byte	$4C,$45,$54,$27,$53,$20,$47,$4F,$20,$42,$55,$52,$53,$54,$20,$49
+	.byte	$54,$2C,$20,$43,$41,$50,$54,$41,$49,$4E,$21,$00
+S002A:
+	.byte	$54,$48,$45,$52,$45,$20,$57,$41,$53,$20,$53,$4C,$49,$4D,$45,$20
+	.byte	$45,$56,$45,$52,$59,$57,$48,$45,$52,$45,$2E,$00
 S0003:
 	.byte	$4F,$52,$20,$41,$54,$20,$4C,$45,$41,$53,$54,$20,$53,$4F,$4D,$45
 	.byte	$4F,$4E,$45,$20,$53,$48,$4F,$4F,$54,$59,$2E,$00
+S004B:
+	.byte	$53,$59,$53,$54,$45,$4D,$20,$53,$54,$41,$42,$49,$4C,$49,$54,$59
+	.byte	$3A,$20,$43,$52,$49,$54,$49,$43,$41,$4C,$2E,$00
+S0053:
+	.byte	$41,$4E,$44,$20,$54,$48,$45,$59,$20,$44,$45,$4D,$41,$4E,$44,$20
+	.byte	$53,$41,$43,$52,$49,$46,$49,$43,$45,$2E,$00
 S000B:
 	.byte	$49,$27,$4C,$4C,$20,$48,$41,$55,$4E,$54,$20,$59,$4F,$55,$20,$50
 	.byte	$45,$52,$53,$4F,$4E,$41,$4C,$4C,$59,$2E,$00
-S000E:
-	.byte	$4C,$45,$54,$27,$53,$20,$4D,$41,$4B,$45,$20,$54,$48,$49,$53,$20
-	.byte	$45,$46,$46,$49,$43,$49,$45,$4E,$54,$00
-S0015:
+S00A5:
+	.byte	$44,$4F,$4E,$27,$54,$20,$47,$45,$54,$20,$55,$53,$45,$44,$20,$54
+	.byte	$4F,$20,$50,$52,$41,$49,$53,$45,$2E,$00
+S001A:
 	.byte	$42,$55,$42,$42,$4C,$45,$20,$4D,$49,$53,$53,$49,$4F,$4E,$20,$53
 	.byte	$55,$43,$43,$45,$53,$53,$46,$55,$4C,$00
+S0095:
+	.byte	$4D,$59,$20,$42,$4C,$4F,$4F,$44,$27,$53,$20,$53,$54,$49,$4C,$4C
+	.byte	$20,$48,$55,$4D,$4D,$49,$4E,$47,$2E,$00
+S000F:
+	.byte	$4C,$45,$54,$27,$53,$20,$4D,$41,$4B,$45,$20,$54,$48,$49,$53,$20
+	.byte	$45,$46,$46,$49,$43,$49,$45,$4E,$54,$00
+S00A7:
+	.byte	$49,$27,$4D,$20,$2A,$51,$55,$49,$56,$45,$52,$49,$4E,$47,$2A,$20
+	.byte	$49,$4E,$20,$50,$4C,$41,$43,$45,$53,$00
+S0085:
+	.byte	$42,$55,$54,$20,$49,$46,$20,$57,$45,$20,$44,$49,$45,$2C,$20,$49
+	.byte	$27,$4D,$20,$54,$41,$4B,$49,$4E,$47,$00
 S0002:
 	.byte	$43,$41,$50,$54,$41,$49,$4E,$2C,$20,$57,$45,$20,$4E,$45,$45,$44
 	.byte	$20,$41,$20,$48,$45,$52,$4F,$2C,$00
-S000D:
+S0072:
+	.byte	$44,$4F,$4E,$27,$54,$20,$43,$4C,$45,$41,$4E,$20,$54,$48,$45,$20
+	.byte	$43,$4F,$43,$4B,$50,$49,$54,$2E,$00
+S000E:
 	.byte	$54,$41,$43,$54,$49,$43,$41,$4C,$20,$53,$59,$53,$54,$45,$4D,$53
 	.byte	$20,$47,$52,$45,$45,$4E,$20,$2D,$00
-S0014:
+S0050:
+	.byte	$54,$48,$45,$20,$42,$55,$42,$42,$4C,$45,$53,$20,$48,$41,$56,$45
+	.byte	$20,$53,$50,$4F,$4B,$45,$4E,$2E,$00
+S0027:
+	.byte	$2A,$4C,$45,$53,$53,$2A,$20,$53,$54,$55,$50,$49,$44,$20,$54,$48
+	.byte	$49,$53,$20,$54,$49,$4D,$45,$2E,$00
+S002F:
+	.byte	$49,$27,$4D,$20,$53,$54,$49,$4C,$4C,$20,$49,$4E,$20,$4F,$4E,$45
+	.byte	$20,$50,$49,$45,$43,$45,$2E,$00
+S0018:
 	.byte	$4E,$49,$43,$45,$20,$53,$48,$4F,$4F,$54,$49,$4E,$47,$2C,$20,$49
 	.byte	$20,$47,$55,$45,$53,$53,$2E,$00
-S0012:
+S0031:
+	.byte	$54,$48,$45,$20,$53,$41,$4D,$45,$20,$46,$4F,$52,$20,$54,$48,$45
+	.byte	$20,$45,$4E,$45,$4D,$59,$2E,$00
+S0015:
 	.byte	$44,$4F,$4E,$27,$54,$20,$45,$58,$50,$45,$43,$54,$20,$4D,$45,$20
 	.byte	$54,$4F,$20,$43,$4C,$41,$50,$00
-S0010:
+S0051:
+	.byte	$54,$48,$45,$59,$20,$53,$41,$59,$20,$27,$50,$4F,$50,$20,$50,$4F
+	.byte	$50,$20,$50,$4F,$50,$27,$2E,$00
+S0098:
+	.byte	$53,$4F,$4D,$45,$54,$48,$49,$4E,$47,$20,$45,$4C,$53,$45,$20,$54
+	.byte	$4F,$20,$4B,$49,$4C,$4C,$2E,$00
+S0086:
+	.byte	$54,$48,$45,$20,$4D,$41,$49,$4E,$46,$52,$41,$4D,$45,$20,$57,$49
+	.byte	$54,$48,$20,$4D,$45,$2E,$00
+S004C:
+	.byte	$4D,$4F,$52,$41,$4C,$45,$3A,$20,$4C,$41,$55,$47,$48,$41,$42,$4C
+	.byte	$59,$20,$4C,$4F,$57,$2E,$00
+S00AA:
+	.byte	$54,$48,$41,$54,$20,$57,$41,$53,$20,$54,$48,$45,$20,$4A,$55,$49
+	.byte	$43,$49,$45,$53,$54,$00
+S005B:
+	.byte	$54,$48,$45,$20,$53,$4D,$45,$4C,$4C,$20,$4F,$46,$20,$56,$49,$43
+	.byte	$54,$4F,$52,$59,$2E,$00
+S0081:
+	.byte	$53,$54,$41,$54,$49,$53,$54,$49,$43,$41,$4C,$20,$53,$55,$52,$56
+	.byte	$49,$56,$41,$4C,$3A,$00
+S003F:
+	.byte	$2A,$53,$4C,$49,$50,$50,$45,$52,$59,$2A,$20,$57,$49,$54,$48,$20
+	.byte	$4A,$4F,$59,$21,$00
+S0088:
+	.byte	$4F,$4F,$48,$2C,$20,$49,$27,$4D,$20,$2A,$54,$52,$45,$4D,$42,$4C
+	.byte	$49,$4E,$47,$2A,$00
+S0039:
+	.byte	$49,$27,$56,$45,$20,$4C,$4F,$47,$47,$45,$44,$20,$54,$48,$45,$4D
+	.byte	$20,$41,$4C,$4C,$00
+S00A8:
+	.byte	$49,$20,$44,$49,$44,$4E,$27,$54,$20,$4B,$4E,$4F,$57,$20,$49,$20
+	.byte	$48,$41,$44,$21,$00
+S0012:
 	.byte	$42,$55,$42,$42,$4C,$45,$20,$4D,$4F,$44,$45,$20,$45,$4E,$47,$41
 	.byte	$47,$45,$44,$21,$00
 S000A:
 	.byte	$49,$46,$20,$59,$4F,$55,$20,$47,$45,$54,$20,$4D,$45,$20,$4B,$49
 	.byte	$4C,$4C,$45,$44,$00
+S0062:
+	.byte	$49,$4D,$50,$52,$4F,$56,$45,$4D,$45,$4E,$54,$20,$44,$45,$54,$45
+	.byte	$43,$54,$45,$44,$00
 S0021:
+	.byte	$59,$4F,$55,$27,$4C,$4C,$20,$44,$49,$45,$20,$54,$48,$49,$53,$20
+	.byte	$54,$49,$4D,$45,$00
+S0033:
+	.byte	$4F,$52,$20,$4D,$59,$20,$46,$41,$49,$54,$48,$20,$49,$4E,$20,$59
+	.byte	$4F,$55,$2E,$00
+S0097:
+	.byte	$43,$4F,$4D,$45,$20,$4F,$4E,$2C,$20,$4C,$45,$54,$27,$53,$20,$46
+	.byte	$49,$4E,$44,$00
+S0078:
+	.byte	$54,$48,$45,$20,$46,$49,$4E,$41,$4C,$20,$53,$4C,$41,$55,$47,$48
+	.byte	$54,$45,$52,$00
+S005D:
+	.byte	$49,$46,$20,$54,$48,$45,$20,$46,$49,$4E,$41,$4C,$20,$42,$41,$54
+	.byte	$54,$4C,$45,$00
+S004E:
+	.byte	$42,$52,$45,$41,$4B,$20,$41,$4E,$59,$54,$48,$49,$4E,$47,$20,$45
+	.byte	$4C,$53,$45,$00
+S0030:
+	.byte	$45,$56,$45,$4E,$20,$49,$46,$20,$49,$20,$43,$41,$4E,$27,$54,$20
+	.byte	$53,$41,$59,$00
+S0045:
+	.byte	$54,$4F,$20,$44,$49,$45,$20,$57,$49,$54,$48,$20,$48,$4F,$4E,$4F
+	.byte	$55,$52,$2E,$00
+S007B:
+	.byte	$49,$4E,$54,$4F,$20,$54,$48,$45,$49,$52,$20,$43,$4F,$52,$50,$53
+	.byte	$45,$53,$00
+S006A:
+	.byte	$50,$4F,$53,$53,$49,$42,$4C,$59,$20,$41,$20,$47,$4C,$49,$54,$43
+	.byte	$48,$2E,$00
+S007A:
+	.byte	$49,$27,$4C,$4C,$20,$43,$41,$52,$56,$45,$20,$4D,$59,$20,$4E,$41
+	.byte	$4D,$45,$00
+S006C:
+	.byte	$44,$49,$44,$20,$59,$4F,$55,$20,$46,$45,$45,$4C,$20,$54,$48,$41
+	.byte	$54,$3F,$00
+S0047:
+	.byte	$4F,$52,$20,$54,$4F,$20,$53,$48,$4F,$4F,$54,$20,$46,$49,$52,$53
+	.byte	$54,$2E,$00
+S003D:
+	.byte	$53,$4F,$20,$4D,$41,$4E,$59,$20,$53,$50,$4C,$41,$54,$54,$45,$52
+	.byte	$53,$21,$00
+S005E:
+	.byte	$44,$49,$53,$41,$50,$50,$4F,$49,$4E,$54,$53,$20,$4D,$45,$2E,$2E
+	.byte	$2E,$00
+S008F:
+	.byte	$53,$4F,$20,$46,$55,$4C,$4C,$20,$4F,$46,$20,$4A,$55,$49,$43,$45
+	.byte	$2E,$00
+S0043:
+	.byte	$4F,$4E,$45,$20,$4D,$4F,$52,$45,$20,$4D,$49,$53,$53,$49,$4F,$4E
+	.byte	$2E,$00
+S0036:
+	.byte	$44,$45,$53,$50,$49,$54,$45,$20,$4D,$55,$4C,$54,$49,$50,$4C,$45
+	.byte	$00
+S00AD:
+	.byte	$49,$27,$56,$45,$20,$4D,$41,$44,$45,$20,$41,$20,$4D,$45,$53,$53
+	.byte	$00
+S0035:
+	.byte	$4D,$49,$53,$53,$49,$4F,$4E,$20,$43,$4F,$4D,$50,$4C,$45,$54,$45
+	.byte	$00
+S0089:
+	.byte	$57,$49,$54,$48,$20,$45,$58,$43,$49,$54,$45,$4D,$45,$4E,$54,$21
+	.byte	$00
+S009C:
+	.byte	$57,$41,$53,$20,$55,$4E,$45,$58,$50,$45,$43,$54,$45,$44,$4C,$59
+	.byte	$00
+S0037:
+	.byte	$4F,$50,$45,$52,$41,$54,$4F,$52,$20,$45,$52,$52,$4F,$52,$53,$2E
+	.byte	$00
+S0066:
+	.byte	$4C,$45,$41,$52,$4E,$20,$53,$4F,$4D,$45,$54,$48,$49,$4E,$47,$3F
+	.byte	$00
+S0077	:=	S00A9+14
+S0044:
+	.byte	$4F,$4E,$45,$20,$4D,$4F,$52,$45,$20,$43,$48,$41,$4E,$43,$45,$00
+S0061	:=	S00A9+14
+S00AB:
+	.byte	$45,$58,$50,$4C,$4F,$53,$49,$4F,$4E,$20,$59,$45,$54,$21,$00
+S002B:
+	.byte	$53,$4F,$20,$4D,$55,$43,$48,$20,$53,$4C,$49,$4D,$45,$2E,$00
+S0082	:=	S00A9+15
+S00A4	:=	S00A9+15
+S00A0	:=	S00A9+15
+S009B	:=	S00A9+15
+S0058	:=	S00A9+16
+S0065	:=	S00A9+16
+S0074:
+	.byte	$49,$27,$4C,$4C,$20,$4C,$49,$43,$4B,$20,$49,$54,$2E,$00
+S005A	:=	S00A9+16
+S0020:
+	.byte	$4F,$52,$20,$54,$48,$45,$59,$20,$54,$48,$49,$4E,$4B,$00
+S00A1:
+	.byte	$50,$45,$52,$46,$4F,$52,$4D,$20,$57,$45,$4C,$4C,$3F,$00
+S0026:
+	.byte	$50,$4C,$45,$41,$53,$45,$20,$52,$45,$4D,$41,$49,$4E,$00
+S00C5:
 	.byte	$4D,$52,$2E,$20,$42,$55,$42,$42,$4C,$45,$53,$3A,$00
-S001B	:=	S0021+0
-S0016:
+S00D7	:=	S00C5+0
+S00B9	:=	S00C5+0
+S00B3	:=	S00C5+0
+S0094	:=	S00A9+17
+S00CB	:=	S00C5+0
+S00DD	:=	S00C5+0
+S008B:
+	.byte	$54,$48,$41,$54,$20,$53,$48,$49,$50,$2E,$2E,$2E,$00
+S00D1	:=	S00C5+0
+S003E:
+	.byte	$54,$48,$45,$20,$46,$4C,$4F,$4F,$52,$20,$49,$53,$00
+S00BF	:=	S00C5+0
+S001B:
 	.byte	$57,$48,$45,$45,$45,$45,$45,$45,$45,$45,$21,$00
-S001D:
+S006E:
+	.byte	$54,$48,$41,$54,$20,$2A,$50,$4F,$50,$2A,$3F,$00
+S0068:
+	.byte	$55,$4E,$45,$58,$50,$45,$43,$54,$45,$44,$2E,$00
+S009D:
+	.byte	$45,$46,$46,$45,$43,$54,$49,$56,$45,$2E,$00
+S003B:
+	.byte	$46,$4F,$52,$20,$4C,$41,$54,$45,$52,$2E,$00
+S009F:
+	.byte	$44,$49,$44,$20,$59,$4F,$55,$2E,$2E,$2E,$00
+S0076:
+	.byte	$54,$48,$49,$53,$20,$49,$53,$20,$49,$54,$00
+S0064	:=	S009F+0
+S0049:
+	.byte	$59,$4F,$55,$52,$20,$43,$41,$4C,$4C,$2E,$00
+S0060:
+	.byte	$41,$4E,$41,$4C,$59,$53,$49,$53,$3A,$00
+S00B5:
 	.byte	$5A,$41,$52,$4E,$45,$4C,$4C,$41,$3A,$00
-S0017	:=	S001D+0
-S001F:
+S00C7	:=	S00B5+0
+S00CD	:=	S00B5+0
+S00BB	:=	S00B5+0
+S00D3	:=	S00B5+0
+S00AF	:=	S00B5+0
+S00C1	:=	S00B5+0
+S00D9	:=	S00B5+0
+S0083:
+	.byte	$55,$4E,$4C,$49,$4B,$45,$4C,$59,$00
+S00B7:
 	.byte	$4C,$55,$4D,$41,$2D,$36,$3A,$00
-S0019	:=	S001F+0
+S00C9	:=	S00B7+0
+S00B1	:=	S00B7+0
+S00BD	:=	S00B7+0
+S00CF	:=	S00B7+0
+S00DB	:=	S00B7+0
+S008D:
+	.byte	$53,$4F,$20,$42,$49,$47,$2E,$00
+S00D5	:=	S00B7+0
+S0059:
+	.byte	$46,$4C,$41,$4D,$45,$53,$2E,$00
+S00C3	:=	S00B7+0
+S009A:
+	.byte	$54,$48,$41,$54,$2E,$2E,$2E,$00
+S0057:
+	.byte	$42,$4C,$4F,$4F,$44,$2E,$00
+S00A3:
+	.byte	$4E,$4F,$2E,$00
 
 ; ---------------------------------------------------------------
 ; void __near__ show_typewriter (const struct $anon-struct-0001 *lines, unsigned char line_count)
@@ -413,21 +1224,21 @@ L0005:	jmp     incsp7
 	ldy     #$00
 	lda     (sp),y
 	cmp     #$01
-	jne     L0006
+	jne     L001C
 ;
 ; if (selected_crewmate == 0) {
 ;
 	lda     _selected_crewmate
-	bne     L0008
+	bne     L001A
 ;
 ; WRITE("ZARNELLA:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S0017)
+	lda     #<(S00AF)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0017)
+	lda     #>(S00AF)
 	sta     (sp),y
 	lda     #$09
 	ldy     #$00
@@ -436,28 +1247,28 @@ L0005:	jmp     incsp7
 	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(zarnella_lv1_start, 3);
+; show_typewriter(zarnella_lv1_start, 4);
 ;
 	lda     #<(_zarnella_lv1_start)
 	ldx     #>(_zarnella_lv1_start)
 	jsr     pushax
-	lda     #$03
+	lda     #$04
 ;
 ; else if (selected_crewmate == 1) {
 ;
-	jmp     L0007
-L0008:	lda     _selected_crewmate
+	jmp     L0016
+L001A:	lda     _selected_crewmate
 	cmp     #$01
 	bne     L0005
 ;
 ; WRITE("LUMA-6:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S0019)
+	lda     #<(S00B1)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0019)
+	lda     #>(S00B1)
 	sta     (sp),y
 	lda     #$07
 	ldy     #$00
@@ -466,25 +1277,25 @@ L0008:	lda     _selected_crewmate
 	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(luma_lv1_start, 3);
+; show_typewriter(luma_lv1_start, 4);
 ;
 	lda     #<(_luma_lv1_start)
 	ldx     #>(_luma_lv1_start)
 	jsr     pushax
-	lda     #$03
+	lda     #$04
 ;
 ; else {
 ;
-	jmp     L0007
+	jmp     L0016
 ;
 ; WRITE("MR. BUBBLES:", 10, 6);
 ;
 L0005:	jsr     decsp3
-	lda     #<(S001B)
+	lda     #<(S00B3)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S001B)
+	lda     #>(S00B3)
 	sta     (sp),y
 	lda     #$0C
 	ldy     #$00
@@ -493,17 +1304,290 @@ L0005:	jsr     decsp3
 	lda     #$CA
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(bubbles_lv1_start, 2);
+; show_typewriter(bubbles_lv1_start, 3);
 ;
 	lda     #<(_bubbles_lv1_start)
 	ldx     #>(_bubbles_lv1_start)
 	jsr     pushax
-	lda     #$02
-L0007:	jsr     _show_typewriter
+	lda     #$03
+L0016:	jsr     _show_typewriter
+;
+; if (level_num == 2) {
+;
+	ldy     #$00
+L001C:	lda     (sp),y
+	cmp     #$02
+	bne     L001F
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L001D
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00B5)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00B5)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_lv2_start, 6);
+;
+	lda     #<(_zarnella_lv2_start)
+	ldx     #>(_zarnella_lv2_start)
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0026
+L001D:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L000A
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00B7)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00B7)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_lv2_start, 6);
+;
+	lda     #<(_luma_lv2_start)
+	ldx     #>(_luma_lv2_start)
+;
+; else {
+;
+	jmp     L0026
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L000A:	jsr     decsp3
+	lda     #<(S00B9)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00B9)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_lv2_start, 6);
+;
+	lda     #<(_bubbles_lv2_start)
+	ldx     #>(_bubbles_lv2_start)
+L0026:	jsr     pushax
+	lda     #$06
+	jsr     _show_typewriter
+;
+; if (level_num == 3) {
+;
+	ldy     #$00
+L001F:	lda     (sp),y
+	cmp     #$03
+	bne     L0022
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L0020
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00BB)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00BB)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_lv3_start, 8);
+;
+	lda     #<(_zarnella_lv3_start)
+	ldx     #>(_zarnella_lv3_start)
+	jsr     pushax
+	lda     #$08
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0018
+L0020:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L000F
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00BD)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00BD)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_lv3_start, 5);
+;
+	lda     #<(_luma_lv3_start)
+	ldx     #>(_luma_lv3_start)
+;
+; else {
+;
+	jmp     L0027
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L000F:	jsr     decsp3
+	lda     #<(S00BF)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00BF)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_lv3_start, 5);
+;
+	lda     #<(_bubbles_lv3_start)
+	ldx     #>(_bubbles_lv3_start)
+L0027:	jsr     pushax
+	lda     #$05
+L0018:	jsr     _show_typewriter
+;
+; if (level_num == 4) {
+;
+	ldy     #$00
+L0022:	lda     (sp),y
+	cmp     #$04
+	jne     L0015
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L0023
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00C1)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00C1)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_boss_start, 9);
+;
+	lda     #<(_zarnella_boss_start)
+	ldx     #>(_zarnella_boss_start)
+	jsr     pushax
+	lda     #$09
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0019
+L0023:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L0014
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00C3)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00C3)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_boss_start, 9);
+;
+	lda     #<(_luma_boss_start)
+	ldx     #>(_luma_boss_start)
+	jsr     pushax
+	lda     #$09
+;
+; else {
+;
+	jmp     L0019
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L0014:	jsr     decsp3
+	lda     #<(S00C5)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00C5)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_boss_start, 11);
+;
+	lda     #<(_bubbles_boss_start)
+	ldx     #>(_bubbles_boss_start)
+	jsr     pushax
+	lda     #$0B
+L0019:	jsr     _show_typewriter
 ;
 ; }
 ;
-L0006:	jmp     incsp1
+L0015:	jmp     incsp1
 
 .endproc
 
@@ -527,21 +1611,21 @@ L0006:	jmp     incsp1
 	ldy     #$00
 	lda     (sp),y
 	cmp     #$01
-	bne     L0006
+	bne     L001C
 ;
 ; if (selected_crewmate == 0) {
 ;
 	lda     _selected_crewmate
-	bne     L0008
+	bne     L001A
 ;
 ; WRITE("ZARNELLA:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S001D)
+	lda     #<(S00C7)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S001D)
+	lda     #>(S00C7)
 	sta     (sp),y
 	lda     #$09
 	ldy     #$00
@@ -550,26 +1634,26 @@ L0006:	jmp     incsp1
 	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(zarnella_lv1_end, 2);
+; show_typewriter(zarnella_lv1_end, 3);
 ;
 	lda     #<(_zarnella_lv1_end)
 	ldx     #>(_zarnella_lv1_end)
 ;
 ; else if (selected_crewmate == 1) {
 ;
-	jmp     L000A
-L0008:	lda     _selected_crewmate
+	jmp     L0026
+L001A:	lda     _selected_crewmate
 	cmp     #$01
 	bne     L0005
 ;
 ; WRITE("LUMA-6:", 12, 6);
 ;
 	jsr     decsp3
-	lda     #<(S001F)
+	lda     #<(S00C9)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S001F)
+	lda     #>(S00C9)
 	sta     (sp),y
 	lda     #$07
 	ldy     #$00
@@ -578,23 +1662,23 @@ L0008:	lda     _selected_crewmate
 	lda     #$CC
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(luma_lv1_end, 2);
+; show_typewriter(luma_lv1_end, 3);
 ;
 	lda     #<(_luma_lv1_end)
 	ldx     #>(_luma_lv1_end)
 ;
 ; else {
 ;
-	jmp     L000A
+	jmp     L0026
 ;
 ; WRITE("MR. BUBBLES:", 10, 6);
 ;
 L0005:	jsr     decsp3
-	lda     #<(S0021)
+	lda     #<(S00CB)
 	iny
 	sta     (sp),y
 	iny
-	lda     #>(S0021)
+	lda     #>(S00CB)
 	sta     (sp),y
 	lda     #$0C
 	ldy     #$00
@@ -603,17 +1687,294 @@ L0005:	jsr     decsp3
 	lda     #$CA
 	jsr     _multi_vram_buffer_horz
 ;
-; show_typewriter(bubbles_lv1_end, 2);
+; show_typewriter(bubbles_lv1_end, 3);
 ;
 	lda     #<(_bubbles_lv1_end)
 	ldx     #>(_bubbles_lv1_end)
-L000A:	jsr     pushax
-	lda     #$02
+L0026:	jsr     pushax
+	lda     #$03
 	jsr     _show_typewriter
+;
+; if (level_num == 2) {
+;
+	ldy     #$00
+L001C:	lda     (sp),y
+	cmp     #$02
+	bne     L001F
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L001D
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00CD)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00CD)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_lv2_end, 6);
+;
+	lda     #<(_zarnella_lv2_end)
+	ldx     #>(_zarnella_lv2_end)
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0027
+L001D:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L000A
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00CF)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00CF)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_lv2_end, 8);
+;
+	lda     #<(_luma_lv2_end)
+	ldx     #>(_luma_lv2_end)
+	jsr     pushax
+	lda     #$08
+;
+; else {
+;
+	jmp     L0017
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L000A:	jsr     decsp3
+	lda     #<(S00D1)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00D1)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_lv2_end, 6);
+;
+	lda     #<(_bubbles_lv2_end)
+	ldx     #>(_bubbles_lv2_end)
+L0027:	jsr     pushax
+	lda     #$06
+L0017:	jsr     _show_typewriter
+;
+; if (level_num == 3) {
+;
+	ldy     #$00
+L001F:	lda     (sp),y
+	cmp     #$03
+	jne     L0022
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L0020
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00D3)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00D3)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_lv3_end, 11);
+;
+	lda     #<(_zarnella_lv3_end)
+	ldx     #>(_zarnella_lv3_end)
+	jsr     pushax
+	lda     #$0B
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0018
+L0020:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L000F
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00D5)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00D5)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_lv3_end, 12);
+;
+	lda     #<(_luma_lv3_end)
+	ldx     #>(_luma_lv3_end)
+	jsr     pushax
+	lda     #$0C
+;
+; else {
+;
+	jmp     L0018
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L000F:	jsr     decsp3
+	lda     #<(S00D7)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00D7)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_lv3_end, 10);
+;
+	lda     #<(_bubbles_lv3_end)
+	ldx     #>(_bubbles_lv3_end)
+	jsr     pushax
+	lda     #$0A
+L0018:	jsr     _show_typewriter
+;
+; if (level_num == 4) {
+;
+	ldy     #$00
+L0022:	lda     (sp),y
+	cmp     #$04
+	jne     L0015
+;
+; if (selected_crewmate == 0) {
+;
+	lda     _selected_crewmate
+	bne     L0023
+;
+; WRITE("ZARNELLA:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00D9)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00D9)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(zarnella_boss_end, 7);
+;
+	lda     #<(_zarnella_boss_end)
+	ldx     #>(_zarnella_boss_end)
+	jsr     pushax
+	lda     #$07
+;
+; else if (selected_crewmate == 1) {
+;
+	jmp     L0019
+L0023:	lda     _selected_crewmate
+	cmp     #$01
+	bne     L0014
+;
+; WRITE("LUMA-6:", 12, 6);
+;
+	jsr     decsp3
+	lda     #<(S00DB)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00DB)
+	sta     (sp),y
+	lda     #$07
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CC
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(luma_boss_end, 13);
+;
+	lda     #<(_luma_boss_end)
+	ldx     #>(_luma_boss_end)
+	jsr     pushax
+	lda     #$0D
+;
+; else {
+;
+	jmp     L0019
+;
+; WRITE("MR. BUBBLES:", 10, 6);
+;
+L0014:	jsr     decsp3
+	lda     #<(S00DD)
+	iny
+	sta     (sp),y
+	iny
+	lda     #>(S00DD)
+	sta     (sp),y
+	lda     #$0C
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$20
+	lda     #$CA
+	jsr     _multi_vram_buffer_horz
+;
+; show_typewriter(bubbles_boss_end, 8);
+;
+	lda     #<(_bubbles_boss_end)
+	ldx     #>(_bubbles_boss_end)
+	jsr     pushax
+	lda     #$08
+L0019:	jsr     _show_typewriter
 ;
 ; }
 ;
-L0006:	jmp     incsp1
+L0015:	jmp     incsp1
 
 .endproc
 
