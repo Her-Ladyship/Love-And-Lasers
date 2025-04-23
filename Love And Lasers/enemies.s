@@ -16,12 +16,18 @@
 	.export		_enemy_y
 	.export		_enemy_active
 	.export		_enemy_frozen
-	.export		_spawn_enemies
+	.export		_spawn_basic
+	.export		_spawn_fast
+	.export		_spawn_tough
 	.export		_update_enemies
 	.export		_clear_all_enemies
 	.import		_i
 	.import		_frame_count
-	.import		_enemy_sprite
+	.import		_enemy_type
+	.import		_enemy_health
+	.import		_enemy_sprite_basic
+	.import		_enemy_sprite_fast
+	.import		_enemy_sprite_tough
 
 .segment	"BSS"
 
@@ -35,12 +41,12 @@ _enemy_frozen:
 	.res	6,$00
 
 ; ---------------------------------------------------------------
-; void __near__ spawn_enemies (void)
+; void __near__ spawn_basic (void)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
 
-.proc	_spawn_enemies: near
+.proc	_spawn_basic: near
 
 .segment	"CODE"
 
@@ -59,7 +65,7 @@ _enemy_frozen:
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	sta     _i
-L000E:	lda     _i
+L0010:	lda     _i
 	cmp     #$06
 	bcs     L0005
 ;
@@ -67,13 +73,25 @@ L000E:	lda     _i
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	bne     L000F
+	bne     L0011
 ;
 ; enemy_active[i] = 1;
 ;
 	ldy     _i
 	lda     #$01
 	sta     _enemy_active,y
+;
+; enemy_type[i] = ENEMY_TYPE_BASIC;
+;
+	ldy     _i
+	lda     #$00
+	sta     _enemy_type,y
+;
+; enemy_health[i] = 1;
+;
+	ldy     _i
+	lda     #$01
+	sta     _enemy_health,y
 ;
 ; enemy_x[i] = 240;
 ;
@@ -87,9 +105,9 @@ L000E:	lda     _i
 	ldx     #>(_enemy_y)
 	clc
 	adc     _i
-	bcc     L000C
+	bcc     L000E
 	inx
-L000C:	jsr     pushax
+L000E:	jsr     pushax
 	jsr     _rand8
 	jsr     pushax
 	lda     #$90
@@ -101,8 +119,181 @@ L000C:	jsr     pushax
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L000F:	inc     _i
-	jmp     L000E
+L0011:	inc     _i
+	jmp     L0010
+;
+; }
+;
+L0005:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ spawn_fast (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_spawn_fast: near
+
+.segment	"CODE"
+
+;
+; if ((frame_count % 60) == 0) {
+;
+	lda     _frame_count
+	jsr     pusha0
+	lda     #$3C
+	jsr     tosumoda0
+	cpx     #$00
+	bne     L0005
+	cmp     #$00
+	bne     L0005
+;
+; for (i = 0; i < MAX_ENEMIES; ++i) {
+;
+	sta     _i
+L0010:	lda     _i
+	cmp     #$06
+	bcs     L0005
+;
+; if (!enemy_active[i]) {
+;
+	ldy     _i
+	lda     _enemy_active,y
+	bne     L0011
+;
+; enemy_active[i] = 1;
+;
+	ldy     _i
+	lda     #$01
+	sta     _enemy_active,y
+;
+; enemy_type[i] = ENEMY_TYPE_FAST;
+;
+	ldy     _i
+	sta     _enemy_type,y
+;
+; enemy_health[i] = 1;
+;
+	sta     _enemy_health,y
+;
+; enemy_x[i] = 240;
+;
+	ldy     _i
+	lda     #$F0
+	sta     _enemy_x,y
+;
+; enemy_y[i] = PLAYFIELD_TOP + (rand8() % (PLAYFIELD_BOTTOM - PLAYFIELD_TOP));
+;
+	lda     #<(_enemy_y)
+	ldx     #>(_enemy_y)
+	clc
+	adc     _i
+	bcc     L000E
+	inx
+L000E:	jsr     pushax
+	jsr     _rand8
+	jsr     pushax
+	lda     #$90
+	jsr     tosumoda0
+	clc
+	adc     #$30
+	ldy     #$00
+	jmp     staspidx
+;
+; for (i = 0; i < MAX_ENEMIES; ++i) {
+;
+L0011:	inc     _i
+	jmp     L0010
+;
+; }
+;
+L0005:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ spawn_tough (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_spawn_tough: near
+
+.segment	"CODE"
+
+;
+; if ((frame_count % 60) == 0) {
+;
+	lda     _frame_count
+	jsr     pusha0
+	lda     #$3C
+	jsr     tosumoda0
+	cpx     #$00
+	bne     L0005
+	cmp     #$00
+	bne     L0005
+;
+; for (i = 0; i < MAX_ENEMIES; ++i) {
+;
+	sta     _i
+L0010:	lda     _i
+	cmp     #$06
+	bcs     L0005
+;
+; if (!enemy_active[i]) {
+;
+	ldy     _i
+	lda     _enemy_active,y
+	bne     L0011
+;
+; enemy_active[i] = 1;
+;
+	ldy     _i
+	lda     #$01
+	sta     _enemy_active,y
+;
+; enemy_type[i] = ENEMY_TYPE_TOUGH;
+;
+	ldy     _i
+	lda     #$02
+	sta     _enemy_type,y
+;
+; enemy_health[i] = 4;
+;
+	ldy     _i
+	lda     #$04
+	sta     _enemy_health,y
+;
+; enemy_x[i] = 240;
+;
+	ldy     _i
+	lda     #$F0
+	sta     _enemy_x,y
+;
+; enemy_y[i] = PLAYFIELD_TOP + (rand8() % (PLAYFIELD_BOTTOM - PLAYFIELD_TOP));
+;
+	lda     #<(_enemy_y)
+	ldx     #>(_enemy_y)
+	clc
+	adc     _i
+	bcc     L000E
+	inx
+L000E:	jsr     pushax
+	jsr     _rand8
+	jsr     pushax
+	lda     #$90
+	jsr     tosumoda0
+	clc
+	adc     #$30
+	ldy     #$00
+	jmp     staspidx
+;
+; for (i = 0; i < MAX_ENEMIES; ++i) {
+;
+L0011:	inc     _i
+	jmp     L0010
 ;
 ; }
 ;
@@ -125,23 +316,23 @@ L0005:	rts
 ;
 	lda     _frame_count
 	and     #$01
-	bne     L0020
+	jne     L0038
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	sta     _i
-L001B:	lda     _i
+L0033:	lda     _i
 	cmp     #$06
-	bcs     L0020
+	bcs     L0038
 ;
 ; if (enemy_active[i] && !enemy_frozen[i]) {
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	beq     L001F
+	beq     L0037
 	ldy     _i
 	lda     _enemy_frozen,y
-	bne     L001F
+	bne     L0037
 ;
 ; if (enemy_x[i] <= ENEMY_LEFT_LIMIT) {
 ;
@@ -158,44 +349,90 @@ L001B:	lda     _i
 ;
 ; } else {
 ;
-	jmp     L001F
+	jmp     L0037
 ;
-; enemy_x[i] -= 1;
+; if (enemy_type[i] == ENEMY_TYPE_BASIC) {
 ;
-L000E:	lda     #<(_enemy_x)
+L000E:	ldy     _i
+	lda     _enemy_type,y
+;
+; } else if (enemy_type[i] == ENEMY_TYPE_FAST) {
+;
+	beq     L0045
+	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$01
+	bne     L0016
+;
+; enemy_x[i] -= 2; // faster!
+;
+	lda     #<(_enemy_x)
 	ldx     #>(_enemy_x)
 	clc
 	adc     _i
-	bcc     L0012
+	bcc     L0018
 	inx
-L0012:	sta     ptr1
+L0018:	sta     ptr1
+	stx     ptr1+1
+	ldy     #$00
+	lda     (ptr1),y
+	sec
+	sbc     #$02
+;
+; } else if (enemy_type[i] == ENEMY_TYPE_TOUGH) {
+;
+	jmp     L0031
+L0016:	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L0037
+;
+; enemy_x[i] -= 1; // tough but slow
+;
+L0045:	lda     #<(_enemy_x)
+	ldx     #>(_enemy_x)
+	clc
+	adc     _i
+	bcc     L001C
+	inx
+L001C:	sta     ptr1
 	stx     ptr1+1
 	ldy     #$00
 	lda     (ptr1),y
 	sec
 	sbc     #$01
-	sta     (ptr1),y
+L0031:	sta     (ptr1),y
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L001F:	inc     _i
-	jmp     L001B
+L0037:	inc     _i
+	jmp     L0033
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0020:	lda     #$00
+L0038:	lda     #$00
 	sta     _i
-L0021:	lda     _i
+L0039:	lda     _i
 	cmp     #$06
-	bcs     L0014
+	bcc     L0046
+;
+; }
+;
+	rts
 ;
 ; if (enemy_active[i]) {
 ;
-	ldy     _i
+L0046:	ldy     _i
 	lda     _enemy_active,y
-	beq     L0022
+	beq     L003A
 ;
-; oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite);
+; if (enemy_type[i] == ENEMY_TYPE_BASIC) {         
+;
+	ldy     _i
+	lda     _enemy_type,y
+	bne     L0023
+;
+; oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_basic);
 ;
 	jsr     decsp2
 	ldy     _i
@@ -206,18 +443,58 @@ L0021:	lda     _i
 	lda     _enemy_y,y
 	ldy     #$00
 	sta     (sp),y
-	lda     #<(_enemy_sprite)
-	ldx     #>(_enemy_sprite)
-	jsr     _oam_meta_spr
+	lda     #<(_enemy_sprite_basic)
+	ldx     #>(_enemy_sprite_basic)
+;
+; } else if (enemy_type[i] == ENEMY_TYPE_FAST) {
+;
+	jmp     L0032
+L0023:	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$01
+	bne     L0028
+;
+; oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_fast);
+;
+	jsr     decsp2
+	ldy     _i
+	lda     _enemy_x,y
+	ldy     #$01
+	sta     (sp),y
+	ldy     _i
+	lda     _enemy_y,y
+	ldy     #$00
+	sta     (sp),y
+	lda     #<(_enemy_sprite_fast)
+	ldx     #>(_enemy_sprite_fast)
+;
+; } else if (enemy_type[i] == ENEMY_TYPE_TOUGH) {
+;
+	jmp     L0032
+L0028:	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L003A
+;
+; oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_tough);
+;
+	jsr     decsp2
+	ldy     _i
+	lda     _enemy_x,y
+	ldy     #$01
+	sta     (sp),y
+	ldy     _i
+	lda     _enemy_y,y
+	ldy     #$00
+	sta     (sp),y
+	lda     #<(_enemy_sprite_tough)
+	ldx     #>(_enemy_sprite_tough)
+L0032:	jsr     _oam_meta_spr
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0022:	inc     _i
-	jmp     L0021
-;
-; }
-;
-L0014:	rts
+L003A:	inc     _i
+	jmp     L0039
 
 .endproc
 

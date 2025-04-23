@@ -164,7 +164,18 @@ void main(void) {
 				spawn_bullets();
 				update_regular_bullets();
 
-				spawn_enemies();
+				//spawn_enemies();
+
+				if (current_level == 1) {
+					spawn_basic();
+				}
+				else if (current_level == 2) {
+					spawn_fast();
+				}
+				else if (current_level == 3) {
+					spawn_tough();
+				}
+
 				update_enemies();
 
 				enemy_killed_check();

@@ -20,6 +20,8 @@
 	.import		_player_x
 	.import		_player_y
 	.import		_player_health
+	.import		_player_score
+	.import		_enemy_type
 	.import		_player_sprite
 	.import		_enemy_x
 	.import		_enemy_y
@@ -175,9 +177,9 @@ L0020:	inc     _player_y
 ;
 	lda     #$00
 	sta     _i
-L0024:	lda     _i
+L002B:	lda     _i
 	cmp     #$06
-	bcc     L0031
+	bcc     L003B
 ;
 ; }
 ;
@@ -185,81 +187,109 @@ L0024:	lda     _i
 ;
 ; if (enemy_active[i] && enemy_x[i] < 44) {
 ;
-L0031:	ldy     _i
+L003B:	ldy     _i
 	lda     _enemy_active,y
-	jeq     L002C
+	jeq     L0038
 	ldy     _i
 	lda     _enemy_x,y
 	cmp     #$2C
-	jcs     L002C
+	jcs     L0038
+;
+; unsigned char hitbox_top = enemy_y[i];
+;
+	ldy     _i
+	lda     _enemy_y,y
+	jsr     pusha
+;
+; unsigned char hitbox_bottom = enemy_y[i] + ((enemy_type[i] == ENEMY_TYPE_TOUGH) ? 24 : 8);
+;
+	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L002F
+	lda     #$18
+	jmp     L0010
+L002F:	lda     #$08
+L0010:	clc
+	ldy     _i
+	adc     _enemy_y,y
+	jsr     pusha
 ;
 ; if ((player_x > enemy_x[i] ? player_x - enemy_x[i] : enemy_x[i] - player_x) < 6 &&
 ;
 	lda     _player_x
 	ldy     _i
 	cmp     _enemy_x,y
-	bcc     L000E
-	beq     L000E
+	bcc     L0013
+	beq     L0013
 	lda     _player_x
 	sec
 	ldy     _i
 	sbc     _enemy_x,y
-	jmp     L002F
-L000E:	ldy     _i
+	jmp     L003A
+L0013:	ldy     _i
 	lda     _enemy_x,y
 	sec
 	sbc     _player_x
-L002F:	ldx     #$00
-	bcs     L0010
+L003A:	ldx     #$00
+	bcs     L0015
 	dex
-L0010:	cmp     #$06
+L0015:	cmp     #$06
 	txa
 	sbc     #$00
-	bvc     L0012
+	bvc     L0017
 	eor     #$80
-L0012:	bpl     L002C
+L0017:	bpl     L0011
 ;
-; (player_y > enemy_y[i] ? player_y - enemy_y[i] : enemy_y[i] - player_y) < 6) {
+; (player_y >= hitbox_top && player_y <= hitbox_bottom)) {
 ;
 	lda     _player_y
-	ldy     _i
-	cmp     _enemy_y,y
-	bcc     L0015
-	beq     L0015
+	ldy     #$01
+	cmp     (sp),y
+	bcc     L0011
 	lda     _player_y
-	sec
-	ldy     _i
-	sbc     _enemy_y,y
-	jmp     L0030
-L0015:	ldy     _i
-	lda     _enemy_y,y
-	sec
-	sbc     _player_y
-L0030:	ldx     #$00
-	bcs     L0017
-	dex
-L0017:	cmp     #$06
-	txa
-	sbc     #$00
-	bvc     L0019
-	eor     #$80
-L0019:	bpl     L002C
+	dey
+	cmp     (sp),y
+	bcc     L0035
+	bne     L0011
 ;
-; enemy_active[i] = 0; // enemy dies on impact
+; enemy_active[i] = 0;
 ;
-	ldy     _i
+L0035:	ldy     _i
 	lda     #$00
 	sta     _enemy_active,y
+;
+; player_score += (enemy_type[i] == ENEMY_TYPE_TOUGH) ? 50 : (enemy_type[i] == ENEMY_TYPE_FAST) ? 20 : 10;
+;
+	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L0020
+	lda     #$32
+	jmp     L0024
+L0020:	ldy     _i
+	lda     _enemy_type,y
+	cmp     #$01
+	bne     L0036
+	lda     #$14
+	jmp     L0024
+L0036:	lda     #$0A
+L0024:	clc
+	adc     _player_score
+	sta     _player_score
+	lda     #$00
+	adc     _player_score+1
+	sta     _player_score+1
 ;
 ; if (!player_invincible) {
 ;
 	lda     _player_invincible
-	bne     L002B
+	bne     L0037
 ;
 ; if (player_health > 0) {
 ;
 	lda     _player_health
-	beq     L002B
+	beq     L0037
 ;
 ; player_health--;
 ;
@@ -267,21 +297,25 @@ L0019:	bpl     L002C
 ;
 ; if (player_health == 0) {
 ;
-L002B:	lda     _player_health
-	bne     L0003
+L0037:	lda     _player_health
+	bne     L0027
 ;
 ; on_player_death();
 ;
-	jmp     _on_player_death
+	jsr     _on_player_death
 ;
-; for (i = 0; i < MAX_ENEMIES; ++i) {
+; break;
 ;
-L002C:	inc     _i
-	jmp     L0024
+L0027:	jmp     incsp2
 ;
 ; }
 ;
-L0003:	rts
+L0011:	jsr     incsp2
+;
+; for (i = 0; i < MAX_ENEMIES; ++i) {
+;
+L0038:	inc     _i
+	jmp     L002B
 
 .endproc
 

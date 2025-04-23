@@ -15,7 +15,10 @@ extern unsigned char enemy_active[MAX_ENEMIES];
 extern unsigned char enemy_frozen[MAX_ENEMIES];
 
 // === ENEMY FUNCTIONS ===
-void spawn_enemies(void);
+void spawn_basic(void);
+void spawn_fast(void);
+void spawn_tough(void);
+
 void update_enemies(void);
 void clear_all_enemies(void);
 

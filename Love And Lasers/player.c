@@ -30,10 +30,14 @@ void handle_shmup_input(void) {
 void check_player_hit(void) {
 	for (i = 0; i < MAX_ENEMIES; ++i) {
 		if (enemy_active[i] && enemy_x[i] < 44) {
-			if ((player_x > enemy_x[i] ? player_x - enemy_x[i] : enemy_x[i] - player_x) < 6 &&
-			    (player_y > enemy_y[i] ? player_y - enemy_y[i] : enemy_y[i] - player_y) < 6) {
+		    unsigned char hitbox_top = enemy_y[i];
+    		unsigned char hitbox_bottom = enemy_y[i] + ((enemy_type[i] == ENEMY_TYPE_TOUGH) ? 24 : 8);
 
-				enemy_active[i] = 0; // enemy dies on impact
+			if ((player_x > enemy_x[i] ? player_x - enemy_x[i] : enemy_x[i] - player_x) < 6 &&
+			    (player_y >= hitbox_top && player_y <= hitbox_bottom)) {
+
+			    enemy_active[i] = 0;
+			    player_score += (enemy_type[i] == ENEMY_TYPE_TOUGH) ? 50 : (enemy_type[i] == ENEMY_TYPE_FAST) ? 20 : 10;
 
 				if (!player_invincible) {
 					if (player_health > 0) {
@@ -44,8 +48,7 @@ void check_player_hit(void) {
 				if (player_health == 0) {
 					on_player_death();
 				}
-				break; // Only take 1 hit per frame
-
+				break;
 			}
 		}
 	}

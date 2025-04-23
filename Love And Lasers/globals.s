@@ -51,16 +51,21 @@
 	.export		_total_romance_score
 	.export		_bullet_box
 	.export		_enemy_box
+	.export		_enemy_type
+	.export		_enemy_health
 	.export		_player_sprite
 	.export		_bullet_sprite
-	.export		_enemy_sprite
 	.export		_special_bullet_sprite
+	.export		_enemy_sprite_basic
+	.export		_enemy_sprite_fast
+	.export		_enemy_sprite_tough
+	.export		_enemy_sprites
 	.export		_palette
 
 .segment	"DATA"
 
 _game_state:
-	.byte	$05
+	.byte	$00
 _current_level:
 	.byte	$01
 _i:
@@ -125,6 +130,10 @@ _bubbles_picks:
 	.byte	$00
 _total_romance_score:
 	.word	$0000
+_enemy_sprites:
+	.addr	_enemy_sprite_basic
+	.addr	_enemy_sprite_fast
+	.addr	_enemy_sprite_tough
 
 .segment	"RODATA"
 
@@ -140,16 +149,48 @@ _bullet_sprite:
 	.byte	$42
 	.byte	$00
 	.byte	$80
-_enemy_sprite:
+_special_bullet_sprite:
+	.byte	$00
+	.byte	$00
+	.byte	$66
+	.byte	$00
+	.byte	$80
+_enemy_sprite_basic:
 	.byte	$00
 	.byte	$00
 	.byte	$43
 	.byte	$00
 	.byte	$80
-_special_bullet_sprite:
+_enemy_sprite_fast:
 	.byte	$00
 	.byte	$00
-	.byte	$66
+	.byte	$46
+	.byte	$00
+	.byte	$80
+_enemy_sprite_tough:
+	.byte	$00
+	.byte	$00
+	.byte	$51
+	.byte	$00
+	.byte	$08
+	.byte	$00
+	.byte	$51
+	.byte	$00
+	.byte	$00
+	.byte	$08
+	.byte	$51
+	.byte	$00
+	.byte	$08
+	.byte	$08
+	.byte	$51
+	.byte	$00
+	.byte	$00
+	.byte	$10
+	.byte	$51
+	.byte	$00
+	.byte	$08
+	.byte	$10
+	.byte	$51
 	.byte	$00
 	.byte	$80
 _palette:
@@ -188,4 +229,8 @@ _bullet_box:
 	.res	4,$00
 _enemy_box:
 	.res	4,$00
+_enemy_type:
+	.res	6,$00
+_enemy_health:
+	.res	6,$00
 

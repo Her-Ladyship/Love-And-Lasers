@@ -25,6 +25,10 @@
 #define LT_GY 0x10
 #define WHITE 0x30
 
+#define ENEMY_TYPE_BASIC 0
+#define ENEMY_TYPE_FAST  1
+#define ENEMY_TYPE_TOUGH 2
+
 #define WRITE(text, x, y) multi_vram_buffer_horz(text, sizeof(text)-1, NTADR_A(x, y))
 #define BLINK_MSG(msg, x, y) display_blinking_message(msg, sizeof(msg)-1, x, y)
 
@@ -105,11 +109,19 @@ extern unsigned int total_romance_score;
 extern struct Box bullet_box;
 extern struct Box enemy_box;
 
+extern unsigned char enemy_type[MAX_ENEMIES];
+extern unsigned char enemy_health[MAX_ENEMIES];
+
 // === SPRITES ===
 extern const unsigned char player_sprite[];
 extern const unsigned char bullet_sprite[];
 extern const unsigned char enemy_sprite[];
 extern const unsigned char special_bullet_sprite[];
+
+extern const unsigned char enemy_sprite_basic[];
+extern const unsigned char enemy_sprite_fast[];
+extern const unsigned char enemy_sprite_tough[];
+extern const unsigned char* enemy_sprites[3];
 
 extern const unsigned char palette[];
 

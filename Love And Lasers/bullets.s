@@ -24,6 +24,8 @@
 	.import		_player_y
 	.import		_bullets
 	.import		_player_score
+	.import		_enemy_type
+	.import		_enemy_health
 	.import		_bullet_sprite
 	.import		_enemy_x
 	.import		_enemy_y
@@ -419,9 +421,9 @@ L0003:	rts
 ;
 	lda     #$00
 	sta     _i
-L0027:	lda     _i
+L0030:	lda     _i
 	cmp     #$03
-	bcc     L0031
+	bcc     L003E
 ;
 ; }
 ;
@@ -429,12 +431,12 @@ L0027:	lda     _i
 ;
 ; if (i % 2 != (frame_count % 2)) continue; // skip this bullet this frame
 ;
-L0031:	and     #$01
+L003E:	and     #$01
 	sta     ptr1
 	lda     _frame_count
 	and     #$01
 	cmp     ptr1
-	jne     L0030
+	jne     L003D
 ;
 ; if (bullets[i].active) {
 ;
@@ -449,30 +451,51 @@ L0031:	and     #$01
 	sta     ptr1+1
 	ldy     #$04
 	lda     (ptr1),y
-	jeq     L0030
+	jeq     L003D
 ;
 ; for (j = 0; j < MAX_ENEMIES; ++j) {
 ;
 	lda     #$00
 	sta     _j
-L0028:	lda     _j
+L0031:	lda     _j
 	cmp     #$06
-	jcs     L0030
+	jcs     L003D
 ;
 ; if (enemy_active[j] && enemy_x[j] <= 240) {
 ;
 	ldy     _j
 	lda     _enemy_active,y
-	jeq     L002F
+	jeq     L003C
 	ldy     _j
 	lda     _enemy_x,y
 	cmp     #$F1
-	jcs     L002F
+	jcs     L003C
+;
+; unsigned char target_y = enemy_y[j];
+;
+	ldy     _j
+	lda     _enemy_y,y
+	jsr     pusha
+;
+; if (enemy_type[j] == ENEMY_TYPE_TOUGH) {
+;
+	ldy     _j
+	ldx     #$00
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L0035
+;
+; target_y += 8;  // Aim for the middle tile!
+;
+	ldy     #$00
+	clc
+	lda     #$08
+	adc     (sp),y
+	sta     (sp),y
 ;
 ; if ((bullets[i].x > enemy_x[j] ? bullets[i].x - enemy_x[j] : enemy_x[j] - bullets[i].x) < 6 &&
 ;
-	ldx     #$00
-	lda     _i
+L0035:	lda     _i
 	jsr     mulax5
 	sta     ptr1
 	txa
@@ -483,8 +506,8 @@ L0028:	lda     _j
 	lda     (ptr1),y
 	ldy     _j
 	cmp     _enemy_x,y
-	bcc     L0014
-	beq     L0014
+	bcc     L0017
+	beq     L0017
 	ldx     #$00
 	lda     _i
 	jsr     mulax5
@@ -499,10 +522,10 @@ L0028:	lda     _j
 	ldy     _j
 	sbc     _enemy_x,y
 	ldx     #$00
-	bcs     L0016
+	bcs     L0019
 	dex
-	jmp     L0016
-L0014:	ldy     _j
+	jmp     L0019
+L0017:	ldy     _j
 	lda     _enemy_x,y
 	jsr     pusha0
 	lda     _i
@@ -515,14 +538,14 @@ L0014:	ldy     _j
 	ldy     #<(_bullets)
 	lda     (ptr1),y
 	jsr     tossuba0
-L0016:	cmp     #$06
+L0019:	cmp     #$06
 	txa
 	sbc     #$00
-	bvc     L0018
+	bvc     L001B
 	eor     #$80
-L0018:	jpl     L002F
+L001B:	jpl     L0015
 ;
-; (bullets[i].y > enemy_y[j] ? bullets[i].y - enemy_y[j] : enemy_y[j] - bullets[i].y) < 6) {
+; (bullets[i].y > target_y ? bullets[i].y - target_y : target_y - bullets[i].y) < 6) {
 ;
 	ldx     #$00
 	lda     _i
@@ -534,12 +557,12 @@ L0018:	jpl     L002F
 	adc     #>(_bullets)
 	sta     ptr1+1
 	ldy     #$01
+	ldx     #$00
 	lda     (ptr1),y
-	ldy     _j
-	cmp     _enemy_y,y
-	bcc     L001B
-	beq     L001B
-	ldx     #$00
+	dey
+	cmp     (sp),y
+	bcc     L0037
+	beq     L0037
 	lda     _i
 	jsr     mulax5
 	clc
@@ -548,17 +571,16 @@ L0018:	jpl     L002F
 	txa
 	adc     #>(_bullets)
 	sta     ptr1+1
-	ldy     #$01
+	iny
 	lda     (ptr1),y
 	sec
-	ldy     _j
-	sbc     _enemy_y,y
+	dey
+	sbc     (sp),y
 	ldx     #$00
-	bcs     L001D
+	bcs     L001E
 	dex
-	jmp     L001D
-L001B:	ldy     _j
-	lda     _enemy_y,y
+	jmp     L001E
+L0037:	lda     (sp),y
 	jsr     pusha0
 	lda     _i
 	jsr     mulax5
@@ -571,12 +593,12 @@ L001B:	ldy     _j
 	ldy     #$01
 	lda     (ptr1),y
 	jsr     tossuba0
-L001D:	cmp     #$06
+L001E:	cmp     #$06
 	txa
 	sbc     #$00
 	bvc     L001F
 	eor     #$80
-L001F:	bpl     L002F
+L001F:	jpl     L0015
 ;
 ; bullets[i].active = 0;
 ;
@@ -593,37 +615,90 @@ L001F:	bpl     L002F
 	ldy     #$04
 	sta     (ptr1),y
 ;
-; enemy_active[j] = 0;
+; if (enemy_health[j] > 1) {
 ;
 	ldy     _j
+	lda     _enemy_health,y
+	cmp     #$02
+	bcc     L0022
+;
+; enemy_health[j]--;
+;
+	lda     #<(_enemy_health)
+	ldx     #>(_enemy_health)
+	clc
+	adc     _j
+	bcc     L0024
+	inx
+L0024:	sta     sreg
+	stx     sreg+1
+	sta     ptr1
+	stx     ptr1+1
+	ldy     #$00
+	lda     (ptr1),y
+	sec
+	sbc     #$01
+	sta     (sreg),y
+;
+; } else {
+;
+	jmp     L0025
+;
+; enemy_active[j] = 0;
+;
+L0022:	ldy     _j
+	lda     #$00
 	sta     _enemy_active,y
+;
+; player_score += (enemy_type[j] == ENEMY_TYPE_TOUGH) ? 50 :
+;
+	ldy     _j
+	lda     _enemy_type,y
+	cmp     #$02
+	bne     L0028
+	lda     #$32
+	jmp     L002C
+;
+; (enemy_type[j] == ENEMY_TYPE_FAST) ? 20 : 10;
+;
+L0028:	ldy     _j
+	lda     _enemy_type,y
+	cmp     #$01
+	bne     L003B
+	lda     #$14
+	jmp     L002C
+L003B:	lda     #$0A
+L002C:	clc
+	adc     _player_score
+	sta     _player_score
+	lda     #$00
+	adc     _player_score+1
+	sta     _player_score+1
 ;
 ; enemy_frozen[j] = 0;
 ;
+L0025:	ldy     _j
+	lda     #$00
 	sta     _enemy_frozen,y
-;
-; player_score += 10;
-;
-	lda     #$0A
-	clc
-	adc     _player_score
-	sta     _player_score
-	bcc     L0030
-	inc     _player_score+1
 ;
 ; break;
 ;
-	jmp     L0030
+	jsr     incsp1
+	jmp     L003D
+;
+; }
+;
+L0015:	jsr     incsp1
 ;
 ; for (j = 0; j < MAX_ENEMIES; ++j) {
 ;
-L002F:	inc     _j
-	jmp     L0028
+L003C:	inc     _j
+	jmp     L0031
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L0030:	inc     _i
-	jmp     L0027
+L003D:	inc     _i
+	jmp     L0030
 
 .endproc
 

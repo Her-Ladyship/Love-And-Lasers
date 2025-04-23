@@ -3,7 +3,7 @@
 
 // === GLOBAL VARIABLES ===
 
-unsigned char game_state = STATE_ENDING;
+unsigned char game_state = STATE_TITLE;
 unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;
@@ -56,6 +56,10 @@ unsigned int total_romance_score = 0;
 struct Box bullet_box;
 struct Box enemy_box;
 
+unsigned char enemy_type[MAX_ENEMIES];
+unsigned char enemy_health[MAX_ENEMIES];
+
+// === SPRITES ===
 const unsigned char player_sprite[] = {
 	0, 0, 0x41, 0,
 	128
@@ -66,15 +70,38 @@ const unsigned char bullet_sprite[] = {
 	128
 };
 
-const unsigned char enemy_sprite[] = {
-    0, 0, 0x43, 0,
-    128
-};
-
 const unsigned char special_bullet_sprite[] = {
 	0, 0, 0x66, 0,
 	128
 };
+
+const unsigned char enemy_sprite_basic[] = {
+    0, 0, 0x43, 0,
+    128
+};
+
+const unsigned char enemy_sprite_fast[] = {
+    0, 0, 0x46, 0,  // Assuming 'F'
+    128
+};
+
+const unsigned char enemy_sprite_tough[] = {
+    0, 0, 0x51, 0,  // Top left
+    8, 0, 0x51, 0,  // Top right
+    0, 8, 0x51, 0,  // Middle left
+    8, 8, 0x51, 0,  // Middle right
+    0, 16, 0x51, 0,  // Bottom left
+    8, 16, 0x51, 0,  // Bottom right
+    128
+};
+
+// Link them together:
+const unsigned char* enemy_sprites[3] = {
+    enemy_sprite_basic,
+    enemy_sprite_fast,
+    enemy_sprite_tough
+};
+
 
 const unsigned char palette[] = {
 	0x0f, 0x01, 0x21, 0x31,

@@ -23,7 +23,9 @@
 	.import		_multi_vram_buffer_horz
 	.import		_enemy_active
 	.import		_enemy_frozen
-	.import		_spawn_enemies
+	.import		_spawn_basic
+	.import		_spawn_fast
+	.import		_spawn_tough
 	.import		_update_enemies
 	.import		_game_state
 	.import		_current_level
@@ -147,7 +149,7 @@ S0003	:=	S0011+11
 ;
 ; ppu_on_all();
 ;
-L00BF:	jsr     _ppu_on_all
+L00C6:	jsr     _ppu_on_all
 ;
 ; ppu_wait_nmi();
 ;
@@ -171,7 +173,7 @@ L0002:	jsr     _ppu_wait_nmi
 ; if (game_state == STATE_TITLE) {
 ;
 	lda     _game_state
-	bne     L0083
+	bne     L0088
 ;
 ; WRITE("LOVE & LASERS", 10, 12);
 ;
@@ -239,9 +241,9 @@ L0002:	jsr     _ppu_wait_nmi
 ; else if (game_state == STATE_BRIEFING) {
 ;
 	jmp     L0002
-L0083:	lda     _game_state
+L0088:	lda     _game_state
 	cmp     #$01
-	jne     L0088
+	jne     L008D
 ;
 ; if (!briefing_started) {
 ;
@@ -376,9 +378,9 @@ L000D:	lda     _pad1
 ; else if (game_state == STATE_SELECT_CREWMATE) {
 ;
 	jmp     L0002
-L0088:	lda     _game_state
+L008D:	lda     _game_state
 	cmp     #$02
-	jne     L0092
+	jne     L0097
 ;
 ; unsigned char old_crewmate = selected_crewmate;
 ;
@@ -389,7 +391,7 @@ L0088:	lda     _game_state
 ;
 	lda     _current_level
 	cmp     #$04
-	bcs     L0089
+	bcs     L008E
 ;
 ; resting_companion_text();
 ;
@@ -397,7 +399,7 @@ L0088:	lda     _game_state
 ;
 ; handle_selection_arrow(current_level >= 4);  // still need arrows!
 ;
-L0089:	lda     _current_level
+L008E:	lda     _current_level
 	cmp     #$04
 	lda     #$00
 	rol     a
@@ -441,14 +443,14 @@ L0016:	jsr     aslax4
 	bne     L0017
 	lda     _current_level
 	cmp     #$04
-	bcs     L008E
+	bcs     L0093
 	lda     _selected_crewmate
 	cmp     _previous_crewmate
 	beq     L0017
 ;
 ; ppu_off();
 ;
-L008E:	jsr     _ppu_off
+L0093:	jsr     _ppu_off
 ;
 ; one_vram_buffer(' ', NTADR_A(8, 11 + old_crewmate * 6));
 ;
@@ -481,28 +483,28 @@ L001D:	jsr     aslax4
 ; if (selected_crewmate == 0) zarnella_picks++;
 ;
 	lda     _selected_crewmate
-	bne     L008F
+	bne     L0094
 	inc     _zarnella_picks
 ;
 ; else if (selected_crewmate == 1) luma_picks++;
 ;
-	jmp     L0091
-L008F:	lda     _selected_crewmate
+	jmp     L0096
+L0094:	lda     _selected_crewmate
 	cmp     #$01
-	bne     L0090
+	bne     L0095
 	inc     _luma_picks
 ;
 ; else if (selected_crewmate == 2) bubbles_picks++;
 ;
-	jmp     L0091
-L0090:	lda     _selected_crewmate
+	jmp     L0096
+L0095:	lda     _selected_crewmate
 	cmp     #$02
-	bne     L0091
+	bne     L0096
 	inc     _bubbles_picks
 ;
 ; previous_crewmate = selected_crewmate;
 ;
-L0091:	lda     _selected_crewmate
+L0096:	lda     _selected_crewmate
 	sta     _previous_crewmate
 ;
 ; game_state = STATE_SHMUP;
@@ -525,14 +527,14 @@ L0017:	jsr     incsp1
 ; else if (game_state == STATE_SHMUP) {
 ;
 	jmp     L0002
-L0092:	lda     _game_state
+L0097:	lda     _game_state
 	cmp     #$03
-	jne     L00AC
+	jne     L00B3
 ;
 ; if (!shmup_screen_drawn) {
 ;
 	lda     _shmup_screen_drawn
-	bne     L0093
+	bne     L0098
 ;
 ; typewriter_reset();
 ;
@@ -557,7 +559,7 @@ L0092:	lda     _game_state
 ;
 ; if (shmup_started == 0) {
 ;
-L0093:	lda     _shmup_started
+L0098:	lda     _shmup_started
 	bne     L0026
 ;
 ; mission_begin_text(current_level);
@@ -629,7 +631,7 @@ L0027:	lda     _pad1
 ;
 ; else {
 ;
-	jmp     L00BF
+	jmp     L00C6
 ;
 ; handle_shmup_input();
 ;
@@ -690,7 +692,7 @@ L0030:	lda     _player_invincible
 ; if (invincibility_timer > 0) {
 ;
 	lda     _invincibility_timer
-	beq     L0099
+	beq     L009E
 ;
 ; invincibility_timer--;
 ;
@@ -702,7 +704,7 @@ L0030:	lda     _player_invincible
 ;
 ; player_invincible = 0;
 ;
-L0099:	sta     _player_invincible
+L009E:	sta     _player_invincible
 ;
 ; if (freeze_timer > 0) {
 ;
@@ -726,7 +728,7 @@ L0038:	dec     _freeze_timer
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	sta     _i
-L009A:	lda     _i
+L009F:	lda     _i
 	cmp     #$06
 	bcs     L003C
 ;
@@ -739,7 +741,7 @@ L009A:	lda     _i
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	inc     _i
-	jmp     L009A
+	jmp     L009F
 ;
 ; update_ability_cooldown();
 ;
@@ -782,13 +784,41 @@ L0040:	jsr     _draw_player
 ;
 	jsr     _update_regular_bullets
 ;
-; spawn_enemies();
+; if (current_level == 1) {
 ;
-	jsr     _spawn_enemies
+	lda     _current_level
+	cmp     #$01
+	bne     L00A0
+;
+; spawn_basic();
+;
+	jsr     _spawn_basic
+;
+; else if (current_level == 2) {
+;
+	jmp     L0045
+L00A0:	lda     _current_level
+	cmp     #$02
+	bne     L00A1
+;
+; spawn_fast();
+;
+	jsr     _spawn_fast
+;
+; else if (current_level == 3) {
+;
+	jmp     L0045
+L00A1:	lda     _current_level
+	cmp     #$03
+	bne     L0045
+;
+; spawn_tough();
+;
+	jsr     _spawn_tough
 ;
 ; update_enemies();
 ;
-	jsr     _update_enemies
+L0045:	jsr     _update_enemies
 ;
 ; enemy_killed_check();
 ;
@@ -802,17 +832,17 @@ L0040:	jsr     _draw_player
 ;
 	lda     _pad1
 	and     #$40
-	beq     L00A8
+	beq     L00AF
 	lda     _pad1_old
 	and     #$40
-	bne     L00A8
+	bne     L00AF
 ;
 ; if (selected_crewmate == 0 && ability_ready) { // Zarnella
 ;
 	lda     _selected_crewmate
-	bne     L00A0
+	bne     L00A7
 	lda     _ability_ready
-	beq     L00A0
+	beq     L00A7
 ;
 ; fire_zarnella_lasers();
 ;
@@ -824,11 +854,11 @@ L0040:	jsr     _draw_player
 ;
 ; if (selected_crewmate == 1 && ability_ready) { // Luma-6
 ;
-L00A0:	lda     _selected_crewmate
+L00A7:	lda     _selected_crewmate
 	cmp     #$01
-	bne     L00A3
+	bne     L00AA
 	lda     _ability_ready
-	beq     L00A3
+	beq     L00AA
 ;
 ; player_invincible = 1;
 ;
@@ -846,25 +876,25 @@ L00A0:	lda     _selected_crewmate
 ;
 ; if (selected_crewmate == 2 && ability_ready) { // Mr Bubbles
 ;
-L00A3:	lda     _selected_crewmate
+L00AA:	lda     _selected_crewmate
 	cmp     #$02
-	bne     L00A8
+	bne     L00AF
 	lda     _ability_ready
-	beq     L00A8
+	beq     L00AF
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	lda     #$00
 	sta     _i
-L00A6:	lda     _i
+L00AD:	lda     _i
 	cmp     #$06
-	bcs     L0052
+	bcs     L0057
 ;
 ; if (enemy_active[i]) {
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	beq     L00A7
+	beq     L00AE
 ;
 ; enemy_frozen[i] = 1;
 ;
@@ -874,12 +904,12 @@ L00A6:	lda     _i
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L00A7:	inc     _i
-	jmp     L00A6
+L00AE:	inc     _i
+	jmp     L00AD
 ;
 ; freeze_timer = 300;
 ;
-L0052:	ldx     #$01
+L0057:	ldx     #$01
 	lda     #$2C
 	sta     _freeze_timer
 	stx     _freeze_timer+1
@@ -890,7 +920,7 @@ L0052:	ldx     #$01
 ;
 ; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 ;
-L00A8:	lda     _pad1
+L00AF:	lda     _pad1
 	and     #$10
 	jeq     L0002
 	lda     _pad1_old
@@ -923,15 +953,15 @@ L00A8:	lda     _pad1
 ;
 ; else if (game_state == STATE_DIALOGUE) {
 ;
-	jmp     L00BF
-L00AC:	lda     _game_state
+	jmp     L00C6
+L00B3:	lda     _game_state
 	cmp     #$04
-	jne     L00B4
+	jne     L00BB
 ;
 ; if (!dialogue_shown) {
 ;
 	lda     _dialogue_shown
-	bne     L00AD
+	bne     L00B4
 ;
 ; ppu_off();
 ;
@@ -952,7 +982,7 @@ L00AC:	lda     _game_state
 ;
 ; mission_end_text(current_level - 1);
 ;
-L00AD:	lda     _current_level
+L00B4:	lda     _current_level
 	sec
 	sbc     #$01
 	jsr     _mission_end_text
@@ -960,7 +990,7 @@ L00AD:	lda     _current_level
 ; if (typewriter_ended) {
 ;
 	lda     _typewriter_ended
-	beq     L0061
+	beq     L0066
 ;
 ; BLINK_MSG("PRESS A TO CONTINUE", 7, 24);
 ;
@@ -982,7 +1012,7 @@ L00AD:	lda     _current_level
 ;
 ; if ((pad1 & PAD_A) && !(pad1_old & PAD_A) && typewriter_ended) {
 ;
-L0061:	lda     _pad1
+L0066:	lda     _pad1
 	and     #$80
 	jeq     L0002
 	lda     _pad1_old
@@ -1012,22 +1042,22 @@ L0061:	lda     _pad1
 ; selected_crewmate = (previous_crewmate == 0) ? 1 : 0;
 ;
 	lda     _previous_crewmate
-	bne     L00B1
+	bne     L00B8
 	lda     #$01
-	jmp     L00B2
-L00B1:	lda     #$00
-L00B2:	sta     _selected_crewmate
+	jmp     L00B9
+L00B8:	lda     #$00
+L00B9:	sta     _selected_crewmate
 ;
 ; if (selected_crewmate == previous_crewmate) selected_crewmate = 2;
 ;
 	cmp     _previous_crewmate
-	bne     L00B3
+	bne     L00BA
 	lda     #$02
 	sta     _selected_crewmate
 ;
 ; briefing_started = 0;
 ;
-L00B3:	lda     #$00
+L00BA:	lda     #$00
 	sta     _briefing_started
 ;
 ; dialogue_shown = 0;
@@ -1042,7 +1072,7 @@ L00B3:	lda     #$00
 ;
 	lda     _current_level
 	cmp     #$05
-	bcc     L0069
+	bcc     L006E
 ;
 ; previous_crewmate = selected_crewmate;
 ;
@@ -1055,11 +1085,11 @@ L00B3:	lda     #$00
 ;
 ; else {
 ;
-	jmp     L007E
+	jmp     L0083
 ;
 ; WRITE("SELECT YOUR CREWMATE", 6, 4);
 ;
-L0069:	jsr     decsp3
+L006E:	jsr     decsp3
 	lda     #<(S000D)
 	ldy     #$01
 	sta     (sp),y
@@ -1077,7 +1107,7 @@ L0069:	jsr     decsp3
 ;
 	lda     _current_level
 	cmp     #$04
-	bne     L006B
+	bne     L0070
 ;
 ; WRITE("FOR THE FINAL BATTLE", 6, 6);
 ;
@@ -1097,24 +1127,24 @@ L0069:	jsr     decsp3
 ;
 ; draw_crewmate_menu();
 ;
-L006B:	jsr     _draw_crewmate_menu
+L0070:	jsr     _draw_crewmate_menu
 ;
 ; game_state = STATE_SELECT_CREWMATE;
 ;
 	lda     #$02
-L007E:	sta     _game_state
+L0083:	sta     _game_state
 ;
 ; else if (game_state == STATE_ENDING) {
 ;
-	jmp     L00BF
-L00B4:	lda     _game_state
+	jmp     L00C6
+L00BB:	lda     _game_state
 	cmp     #$05
-	jne     L00B8
+	jne     L00BF
 ;
 ; if (!ending_shown) {
 ;
 	lda     _ending_shown
-	bne     L006E
+	bne     L0073
 ;
 ; total_romance_score = player_score + (get_picks_for_winner() * 50) + affection_bonus();
 ;
@@ -1139,12 +1169,12 @@ L00B4:	lda     _game_state
 ;
 ; show_romance_ending();
 ;
-L006E:	jsr     _show_romance_ending
+L0073:	jsr     _show_romance_ending
 ;
 ; if (typewriter_ended) {
 ;
 	lda     _typewriter_ended
-	beq     L0071
+	beq     L0076
 ;
 ; if (total_romance_score > 3000) {
 ;
@@ -1152,7 +1182,7 @@ L006E:	jsr     _show_romance_ending
 	cmp     #$B9
 	lda     _total_romance_score+1
 	sbc     #$0B
-	bcc     L0070
+	bcc     L0075
 ;
 ; BLINK_MSG("YOU WIN! - PRESS START", 5, 26);
 ;
@@ -1165,17 +1195,17 @@ L006E:	jsr     _show_romance_ending
 ;
 ; else {
 ;
-	jmp     L00C7
+	jmp     L00CE
 ;
 ; BLINK_MSG("YOU WIN? - PRESS START", 5, 26);
 ;
-L0070:	jsr     decsp4
+L0075:	jsr     decsp4
 	lda     #<(S0013)
 	ldy     #$02
 	sta     (sp),y
 	iny
 	lda     #>(S0013)
-L00C7:	sta     (sp),y
+L00CE:	sta     (sp),y
 	lda     #$16
 	ldy     #$01
 	sta     (sp),y
@@ -1187,7 +1217,7 @@ L00C7:	sta     (sp),y
 ;
 ; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 ;
-L0071:	lda     _pad1
+L0076:	lda     _pad1
 	and     #$10
 	jeq     L0002
 	lda     _pad1_old
@@ -1241,8 +1271,8 @@ L0071:	lda     _pad1
 ;
 ; else if (game_state == STATE_GAME_OVER) {
 ;
-	jmp     L00BF
-L00B8:	lda     _game_state
+	jmp     L00C6
+L00BF:	lda     _game_state
 	cmp     #$06
 	jne     L0002
 ;
@@ -1253,7 +1283,7 @@ L00B8:	lda     _game_state
 ; if (typewriter_ended) {
 ;
 	lda     _typewriter_ended
-	beq     L0078
+	beq     L007D
 ;
 ; BLINK_MSG("YOU LOSE - PRESS START", 5, 26);
 ;
@@ -1275,7 +1305,7 @@ L00B8:	lda     _game_state
 ;
 ; if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 ;
-L0078:	lda     _pad1
+L007D:	lda     _pad1
 	and     #$10
 	jeq     L0002
 	lda     _pad1_old
@@ -1319,7 +1349,7 @@ L0078:	lda     _pad1
 ;
 ; while (1){
 ;
-	jmp     L00BF
+	jmp     L00C6
 
 .endproc
 

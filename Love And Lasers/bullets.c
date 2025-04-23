@@ -49,12 +49,21 @@ void enemy_killed_check(void) {
 		if (bullets[i].active) {
 			for (j = 0; j < MAX_ENEMIES; ++j) {
 				if (enemy_active[j] && enemy_x[j] <= 240) {
+					unsigned char target_y = enemy_y[j];
+					if (enemy_type[j] == ENEMY_TYPE_TOUGH) {
+					    target_y += 8;  // Aim for the middle tile!
+					}
 					if ((bullets[i].x > enemy_x[j] ? bullets[i].x - enemy_x[j] : enemy_x[j] - bullets[i].x) < 6 &&
-						(bullets[i].y > enemy_y[j] ? bullets[i].y - enemy_y[j] : enemy_y[j] - bullets[i].y) < 6) {
+						(bullets[i].y > target_y ? bullets[i].y - target_y : target_y - bullets[i].y) < 6) {
 						bullets[i].active = 0;
-						enemy_active[j] = 0;
+						if (enemy_health[j] > 1) {
+						    enemy_health[j]--;
+						} else {
+					    enemy_active[j] = 0;
+					    player_score += (enemy_type[j] == ENEMY_TYPE_TOUGH) ? 50 :
+					                    (enemy_type[j] == ENEMY_TYPE_FAST) ? 20 : 10;
+						}
 						enemy_frozen[j] = 0;
-						player_score += 10;
 						break;
 					}
 				}
