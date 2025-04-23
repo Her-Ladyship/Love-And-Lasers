@@ -60,7 +60,7 @@
 .segment	"DATA"
 
 _game_state:
-	.byte	$00
+	.byte	$05
 _current_level:
 	.byte	$01
 _i:
@@ -72,7 +72,7 @@ _briefing_started:
 _selected_crewmate:
 	.byte	$00
 _previous_crewmate:
-	.byte	$FF
+	.byte	$00
 _shmup_screen_drawn:
 	.byte	$00
 _shmup_started:

@@ -3,13 +3,13 @@
 
 // === GLOBAL VARIABLES ===
 
-unsigned char game_state = STATE_TITLE;
+unsigned char game_state = STATE_ENDING;
 unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;
 unsigned char briefing_started = 0;
 unsigned char selected_crewmate = 0;
-unsigned char previous_crewmate = 255; // no one has been on a mission yet
+unsigned char previous_crewmate = 0;
 unsigned char shmup_screen_drawn = 0;
 unsigned char shmup_started = 0;
 unsigned char dialogue_shown = 0;

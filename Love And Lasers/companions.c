@@ -135,3 +135,4 @@ unsigned int get_picks_for_winner(void) {
     if (winner == 2) return bubbles_picks;
     return 0; // Failsafe
 }
+

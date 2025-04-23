@@ -1,6 +1,8 @@
 
 #include "dialogue.h"
 #include "globals.h"
+#include "companions.h"
+#include "hud.h"
 #include "lib/neslib.h"
 #include "lib/nesdoug.h"
 #include "screens.h"
@@ -77,6 +79,7 @@ const DialogueLine luma_lv2_start[] = {
 const DialogueLine bubbles_lv2_start[] = {
 	{"LAST NIGHT I DREAMT OF YOU.", 2, 11},
 	{"THERE WAS SLIME EVERYWHERE.", 2, 13},
+	{"                             ", 0, 17},
 	{"SO MUCH SLIME.", 9, 15},
 	{"                             ", 0, 17},
 	{"LET'S MAKE THE DREAM *REAL*.", 2, 19},
@@ -232,7 +235,7 @@ const DialogueLine zarnella_boss_end[] = {
 const DialogueLine luma_boss_end[] = {
 	{"THAT...", 4, 11},
 	{"              ", 0, 15},
-	{"WAS UNEXPECTEDLY", 11, 11},
+	{"WAS UNEXPECTEDLY", 12, 11},
 	{"EFFECTIVE.", 11, 13},
 	{"                             ", 0, 15},
 	{"DID YOU...", 5, 17},
@@ -254,6 +257,112 @@ const DialogueLine bubbles_boss_end[] = {
 	{"                             ", 0, 13},
 	{"I'VE MADE A MESS", 8, 21},
 	{"                             ", 0, 13}
+};
+
+const DialogueLine zarnella_romance[] = {
+	{"LOOK, DON'T MAKE ME SAY IT", 3, 9},
+	{"                ", 0, 13},
+	{"I DIDN'T HATE WORKING WITH YOU", 1, 11},
+	{"                             ", 0, 13},
+	{"...FINE. I *LIKE* YOU, MEATBAG.", 1, 15},
+	{"                             ", 0, 13},
+	{"BUT IF YOU TELL ANYONE", 5, 17},
+	{"              ", 0, 13},
+	{"I'LL KILL YOU", 10, 19},
+	{"                             ", 0, 13}
+};
+
+const DialogueLine luma_romance[] = {
+	{"ANOMALOUS DATA DETECTED:", 4, 9},
+	{"                             ", 0, 13},
+	{"FEELINGS... ", 2, 11},
+	{"              ", 0, 13},
+	{"STRONG FEELINGS.", 14, 11},
+	{"                             ", 0, 13},
+	{"EMOTIONAL CORES.", 8, 15},
+	{"AT MAXIMUM OUTPUT.", 7, 17},
+	{"                             ", 0, 13},
+	{"REQUEST: ", 3, 19},
+	{"              ", 0, 13},
+	{"REMAIN BY MY SIDE.", 12, 19},
+	{"                             ", 0, 13},
+	{"FOR... ", 3, 21},
+	{"              ", 0, 13},
+	{"OPTIMAL PERFORMANCE.", 10, 21},
+	{"                             ", 0, 13}
+};
+
+const DialogueLine bubbles_romance[] = {
+	{"WUBBLE WUBBLE! YOU PICKED ME!", 2, 9},
+	{"                             ", 0, 17},
+	{"YOU AND ME, FOREVER!", 6, 11},
+	{"              ", 0, 17},
+	{"NO ESCAPE. LOTS OF SLIME.", 4, 13},
+	{"                ", 0, 17},
+	{"I'LL STICK TO YOU LIKE GLUE", 3, 15},
+	{"                             ", 0, 17},
+	{"POP POP POP...", 9, 19},
+	{"               ", 0, 17},
+	{"THAT'S THE SOUND OF LOVE!", 3, 21},
+	{"                             ", 0, 17}
+};
+
+const DialogueLine lonely_ending[] = {
+	{"YOUR CREW WENT THEIR OWN WAY", 2, 5},
+	{"                             ", 0, 3},
+	{"NO LOVE. ", 6, 9},
+	{"              ", 0, 3},
+	{"NO PARTNER.", 15, 9},
+	{"                             ", 0, 3},
+	{"JUST YOU.", 12, 13},
+	{"                             ", 0, 3},
+	{"FLOATING ALONE AMONG THE STARS", 1, 15},
+	{"                             ", 0, 3},
+	{"BETTER LUCK NEXT TIME, CAPTAIN", 1, 19},
+	{"                             ", 0, 3}
+};
+
+const DialogueLine gameover_early[] = {
+	{"MISSION FAILED.", 9, 6},
+	{"                             ", 0, 21},
+	{"YOU DIED SO FAST,", 8, 10},
+	{"             ", 0, 21},
+	{"THE ENEMY DIDN'T EVEN NOTICE.", 2, 12},
+	{"                             ", 0, 21},
+	{"GALACTIC COMMAND IS...", 6, 16},
+	{"                             ", 0, 21},
+	{"EMBARRASSED", 11, 20},
+	{"                             ", 0, 21}
+};
+
+const DialogueLine gameover_mid[] = {
+	{"SO CLOSE...", 5, 6},
+	{"              ", 0, 20},
+	{"AND YET...", 17, 6},
+	{"                             ", 0, 20},
+	{"YOUR CREWMATE NEVER GOT TO", 3, 10},
+	{"TELL YOU HOW THEY FELT.", 5, 12},
+	{"                             ", 0, 20},
+	{"THE WAR IS LOST &", 8, 16},
+	{"THE STARS GROW DIM.", 7, 18},
+	{"                             ", 0, 20}
+};
+
+const DialogueLine gameover_late[] = {
+	{"YOU DIED IN", 11, 3},
+	{"GLORIOUS LASERFIRE.", 7, 5},
+	{"                             ", 0, 7},
+	{"YOUR SHIP'S CORE EXPLODED", 4, 9},
+	{"IN SILENCE.", 11, 11},
+	{"                             ", 0, 7},
+	{"THE ENEMY CLAIMED VICTORY", 4, 15},
+	{"                             ", 0, 7},
+	{"YOUR CREW?", 9, 19},
+	{"              ", 0, 7},
+	{"GONE.", 20, 19},
+	{"                             ", 0, 7},
+	{"LOVE NEVER STOOD A CHANCE", 4, 23},
+	{"                             ", 0, 7}
 };
 
 unsigned char typewriter_char = 0;
@@ -297,7 +406,7 @@ void mission_begin_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv1_start, 4);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv1_start, 4);
 		}
 		else {
@@ -311,12 +420,12 @@ void mission_begin_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv2_start, 6);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv2_start, 6);
 		}
 		else {
 			WRITE("MR. BUBBLES:", 10, 6);
-			show_typewriter(bubbles_lv2_start, 6);
+			show_typewriter(bubbles_lv2_start, 7);
 		}
 	}
 	if (level_num == 3) {
@@ -325,7 +434,7 @@ void mission_begin_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv3_start, 8);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv3_start, 5);
 		}
 		else {
@@ -339,7 +448,7 @@ void mission_begin_text(unsigned char level_num) {
 			show_typewriter(zarnella_boss_start, 9);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_boss_start, 9);
 		}
 		else {
@@ -356,7 +465,7 @@ void mission_end_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv1_end, 3);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv1_end, 3);
 		}
 		else {
@@ -370,7 +479,7 @@ void mission_end_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv2_end, 6);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv2_end, 8);
 		}
 		else {
@@ -384,7 +493,7 @@ void mission_end_text(unsigned char level_num) {
 			show_typewriter(zarnella_lv3_end, 11);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_lv3_end, 12);
 		}
 		else {
@@ -398,7 +507,7 @@ void mission_end_text(unsigned char level_num) {
 			show_typewriter(zarnella_boss_end, 7);
 		}
 		else if (selected_crewmate == 1) {
-			WRITE("LUMA-6:", 12, 6);
+			WRITE("LUMA-6:", 13, 6);
 			show_typewriter(luma_boss_end, 13);
 		}
 		else {
@@ -406,4 +515,39 @@ void mission_end_text(unsigned char level_num) {
 			show_typewriter(bubbles_boss_end, 8);
 		}
 	}
+}
+
+void show_romance_ending(void) {
+    unsigned char winner = get_romance_winner();
+
+    if (total_romance_score >= 3000) {
+        if (winner == 0) { // Zarnella
+			WRITE("ZARNELLA:", 12, 6);
+			show_typewriter(zarnella_romance, 10);
+        } else if (winner == 1) { // Luma-6
+			WRITE("LUMA-6:", 13, 6);
+			show_typewriter(luma_romance, 17);
+        } else { // Mr. Bubbles
+			WRITE("MR. BUBBLES:", 10, 6);
+			show_typewriter(bubbles_romance, 12);
+        }
+    } else {
+        show_typewriter(lonely_ending, 12);
+    }
+	player_score = total_romance_score;
+    update_score_string();
+    WRITE(score_string, 10, 24);
+
+}
+
+void show_game_over_screen(void) {
+
+    if (current_level <= 2) {
+        show_typewriter(gameover_early, 10);
+    } else if (current_level == 3) {
+		show_typewriter(gameover_mid, 10);
+    } else {
+        show_typewriter(gameover_late, 14);
+    }
+
 }

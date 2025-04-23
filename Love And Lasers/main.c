@@ -221,51 +221,51 @@ void main(void) {
 				clear_screen();
 				clear_line(6);
 				clear_line(24);
-				WRITE("SELECT YOUR CREWMATE", 6, 4);
-				if (current_level == 4) {
-					WRITE("FOR THE FINAL BATTLE", 6, 6);
-				}
-				draw_crewmate_menu();
 				selected_crewmate = (previous_crewmate == 0) ? 1 : 0;
 				if (selected_crewmate == previous_crewmate) selected_crewmate = 2;
 				briefing_started = 0;
 				dialogue_shown = 0;
 				typewriter_reset();
-				
-				game_state = STATE_SELECT_CREWMATE;
-				ppu_on_all();
 				if (current_level >= 5) {
-					selected_crewmate = get_romance_winner();
-					total_romance_score = player_score + (get_picks_for_winner() * 50) + affection_bonus();
+					previous_crewmate = selected_crewmate;
 					game_state = STATE_ENDING;
 				}
+				else {
+					WRITE("SELECT YOUR CREWMATE", 6, 4);
+					if (current_level == 4) {
+						WRITE("FOR THE FINAL BATTLE", 6, 6);
+					}
+					draw_crewmate_menu();
+					game_state = STATE_SELECT_CREWMATE;
+				}
+				ppu_on_all();
 			}
 		}
 		else if (game_state == STATE_ENDING) {
 			if (!ending_shown) {
-				ppu_off();
-				clear_screen();
-				if (total_romance_score >= 500) {
-					WRITE("YOU GOT THE GUY/GIRL/BLOB", 4, 10);
-				}
-				 else if (total_romance_score < 500) {
-					WRITE("YOU WENT HOME LONELY", 6, 10);
-				}
-				WRITE("THANKS FOR PLAYING", 7, 12);
-				// TESTING
-				player_score = total_romance_score;
-				update_score_string();
-				WRITE(score_string, 10, 16);
-				// TESTING OVER
-				WRITE("PRESS START TO RESTART", 5, 24);
+				total_romance_score = player_score + (get_picks_for_winner() * 50) + affection_bonus();
 				ending_shown = 1;
-				ppu_on_all();
 			}
+
+			show_romance_ending();
+			if (typewriter_ended) {
+				if (total_romance_score > 3000) {
+					BLINK_MSG("YOU WIN! - PRESS START", 5, 26);
+				}
+				else {
+					BLINK_MSG("YOU WIN? - PRESS START", 5, 26);
+				}
+			}
+
 			if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 				ppu_off();
 				clear_screen();
+				clear_line(6);
+				clear_line(24);
+				clear_line(26);
 
 				// Reset everything for a new game
+				typewriter_reset();
 				current_level = 1;
 				init_level(1);
 
@@ -275,14 +275,21 @@ void main(void) {
 			}
 		}
 		else if (game_state == STATE_GAME_OVER) {
-			BLINK_MSG("GAME OVER", 12, 14);
+
+			show_game_over_screen();
+
+			if (typewriter_ended) {
+				BLINK_MSG("YOU LOSE - PRESS START", 5, 26);
+			}
 
 			if ((pad1 & PAD_START) && !(pad1_old & PAD_START)) {
 				ppu_off();
 				clear_screen();
+				clear_line(26);
 				oam_clear();
 
 				// Reset everything for a new game
+				typewriter_reset();
 				current_level = 1;
 				init_level(1);
 
