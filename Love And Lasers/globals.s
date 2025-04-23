@@ -14,6 +14,7 @@
 	.export		_current_level
 	.export		_i
 	.export		_j
+	.export		_briefing_started
 	.export		_selected_crewmate
 	.export		_previous_crewmate
 	.export		_shmup_screen_drawn
@@ -44,7 +45,10 @@
 	.export		_typewriter_step
 	.export		_typewriter_line
 	.export		_typewriter_ended
-	.export		_briefing_started
+	.export		_zarnella_picks
+	.export		_luma_picks
+	.export		_bubbles_picks
+	.export		_total_romance_score
 	.export		_bullet_box
 	.export		_enemy_box
 	.export		_player_sprite
@@ -62,6 +66,8 @@ _current_level:
 _i:
 	.byte	$00
 _j:
+	.byte	$00
+_briefing_started:
 	.byte	$00
 _selected_crewmate:
 	.byte	$00
@@ -111,8 +117,14 @@ _typewriter_line:
 	.byte	$00
 _typewriter_ended:
 	.byte	$00
-_briefing_started:
+_zarnella_picks:
 	.byte	$00
+_luma_picks:
+	.byte	$00
+_bubbles_picks:
+	.byte	$00
+_total_romance_score:
+	.word	$0000
 
 .segment	"RODATA"
 

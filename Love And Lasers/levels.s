@@ -23,6 +23,10 @@
 	.import		_player_health
 	.import		_player_score
 	.import		_shmup_timer
+	.import		_zarnella_picks
+	.import		_luma_picks
+	.import		_bubbles_picks
+	.import		_total_romance_score
 	.import		_clear_all_enemies
 	.import		_clear_all_bullets
 	.import		_clear_screen
@@ -74,15 +78,38 @@
 	lda     #$03
 	sta     _player_health
 ;
+; if (current_level == 1) {
+;
+	lda     _current_level
+	cmp     #$01
+	bne     L0002
+;
 ; player_score = 0;
 ;
 	lda     #$00
 	sta     _player_score
 	sta     _player_score+1
 ;
+; zarnella_picks = 0;
+;
+	sta     _zarnella_picks
+;
+; luma_picks = 0;
+;
+	sta     _luma_picks
+;
+; bubbles_picks = 0;
+;
+	sta     _bubbles_picks
+;
+; total_romance_score = 0;
+;
+	sta     _total_romance_score
+	sta     _total_romance_score+1
+;
 ; reset_companion_ability_state();
 ;
-	jsr     _reset_companion_ability_state
+L0002:	jsr     _reset_companion_ability_state
 ;
 ; }
 ;

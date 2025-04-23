@@ -30,21 +30,20 @@ void resting_companion_text(void) {
 	}
 }
 
-void handle_selection_arrow(void) {
+void handle_selection_arrow(unsigned char allow_all) {
 	// DOWN
 	if ((pad1 & PAD_DOWN) && !(pad1_old & PAD_DOWN)) {
 		do {
 			selected_crewmate = (selected_crewmate + 1) % 3;
-		} while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
+		} while (!allow_all && selected_crewmate == previous_crewmate && previous_crewmate != 255);
 	}
 
 	// UP
 	if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
 		do {
 			selected_crewmate = (selected_crewmate == 0) ? 2 : selected_crewmate - 1;
-		} while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
+		} while (!allow_all && selected_crewmate == previous_crewmate && previous_crewmate != 255);
 	}
-
 }
 
 void update_ability_cooldown(void) {
@@ -112,4 +111,27 @@ void draw_zarnella_lasers(void) {
 			oam_meta_spr(lx, ly, special_bullet_sprite); // can be replaced with laser-specific sprite later
 		}
 	}
+}
+
+unsigned char get_romance_winner(void) {
+    if (zarnella_picks > luma_picks && zarnella_picks > bubbles_picks) return 0;
+    if (luma_picks > zarnella_picks && luma_picks > bubbles_picks) return 1;
+    if (bubbles_picks > zarnella_picks && bubbles_picks > luma_picks) return 2;
+
+    // Tie-breaker: whoever was chosen last
+    return selected_crewmate;
+}
+
+unsigned int affection_bonus(void) {
+    if (zarnella_picks >= 3 || luma_picks >= 3 || bubbles_picks >= 3) return 350;
+    if (zarnella_picks == 2 || luma_picks == 2 || bubbles_picks == 2) return 100;
+    return 0;
+}
+
+unsigned int get_picks_for_winner(void) {
+    unsigned char winner = get_romance_winner();
+    if (winner == 0) return zarnella_picks;
+    if (winner == 1) return luma_picks;
+    if (winner == 2) return bubbles_picks;
+    return 0; // Failsafe
 }

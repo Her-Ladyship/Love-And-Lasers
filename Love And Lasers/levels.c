@@ -15,7 +15,13 @@ void init_level(unsigned char level) {
 
 	shmup_timer = 5400; // 90 seconds (can change per level)
 	player_health = MAX_HEALTH;
-	player_score = 0;
+	if (current_level == 1) {
+		player_score = 0;
+		zarnella_picks = 0;
+		luma_picks = 0;
+		bubbles_picks = 0;
+		total_romance_score = 0;
+	}
 
 	reset_companion_ability_state();
 }

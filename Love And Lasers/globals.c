@@ -7,6 +7,7 @@ unsigned char game_state = STATE_TITLE;
 unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;
+unsigned char briefing_started = 0;
 unsigned char selected_crewmate = 0;
 unsigned char previous_crewmate = 255; // no one has been on a mission yet
 unsigned char shmup_screen_drawn = 0;
@@ -45,7 +46,12 @@ char timer_string[10] = "TIMER: 90";
 unsigned char typewriter_step = 0;
 unsigned char typewriter_line = 0;
 unsigned char typewriter_ended = 0;
-unsigned char briefing_started = 0;
+
+unsigned char zarnella_picks = 0;
+unsigned char luma_picks = 0;
+unsigned char bubbles_picks = 0;
+
+unsigned int total_romance_score = 0;
 
 struct Box bullet_box;
 struct Box enemy_box;

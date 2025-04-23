@@ -65,16 +65,25 @@ void main(void) {
 		}
 		else if (game_state == STATE_SELECT_CREWMATE) {
 			unsigned char old_crewmate = selected_crewmate;
-			resting_companion_text();
 
-			handle_selection_arrow();
+			if (current_level < 4) {
+				resting_companion_text();
+				handle_selection_arrow(current_level >= 4);
+			} else {
+				// Boss round: allow free selection, no lockout, no resting text
+				handle_selection_arrow(current_level >= 4);  // still need arrows!
+			}
 			one_vram_buffer(' ', NTADR_A(6, 10 + old_crewmate * 6));
 			update_arrow();
 
-			if ((pad1 & PAD_A) && !(pad1_old & PAD_A) && selected_crewmate != previous_crewmate) {
+			if ((pad1 & PAD_A) && !(pad1_old & PAD_A) && (current_level >= 4 || selected_crewmate != previous_crewmate)) {
 				ppu_off();
-				one_vram_buffer(' ', NTADR_A(8, 11 + old_crewmate * 4));
+				one_vram_buffer(' ', NTADR_A(8, 11 + old_crewmate * 6));
 				clear_screen();
+
+				if (selected_crewmate == 0) zarnella_picks++;
+				else if (selected_crewmate == 1) luma_picks++;
+				else if (selected_crewmate == 2) bubbles_picks++;
 
 				previous_crewmate = selected_crewmate;
 
@@ -201,7 +210,6 @@ void main(void) {
 				ppu_on_all();
 			}
 
-			// Always run this, every frame
 			mission_end_text(current_level - 1);
 
 			if (typewriter_ended) {
@@ -214,6 +222,9 @@ void main(void) {
 				clear_line(6);
 				clear_line(24);
 				WRITE("SELECT YOUR CREWMATE", 6, 4);
+				if (current_level == 4) {
+					WRITE("FOR THE FINAL BATTLE", 6, 6);
+				}
 				draw_crewmate_menu();
 				selected_crewmate = (previous_crewmate == 0) ? 1 : 0;
 				if (selected_crewmate == previous_crewmate) selected_crewmate = 2;
@@ -224,6 +235,8 @@ void main(void) {
 				game_state = STATE_SELECT_CREWMATE;
 				ppu_on_all();
 				if (current_level >= 5) {
+					selected_crewmate = get_romance_winner();
+					total_romance_score = player_score + (get_picks_for_winner() * 50) + affection_bonus();
 					game_state = STATE_ENDING;
 				}
 			}
@@ -232,8 +245,18 @@ void main(void) {
 			if (!ending_shown) {
 				ppu_off();
 				clear_screen();
-				WRITE("ENDING GOES HERE", 8, 10);
+				if (total_romance_score >= 500) {
+					WRITE("YOU GOT THE GUY/GIRL/BLOB", 4, 10);
+				}
+				 else if (total_romance_score < 500) {
+					WRITE("YOU WENT HOME LONELY", 6, 10);
+				}
 				WRITE("THANKS FOR PLAYING", 7, 12);
+				// TESTING
+				player_score = total_romance_score;
+				update_score_string();
+				WRITE(score_string, 10, 16);
+				// TESTING OVER
 				WRITE("PRESS START TO RESTART", 5, 24);
 				ending_shown = 1;
 				ppu_on_all();

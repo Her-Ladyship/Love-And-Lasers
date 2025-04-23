@@ -19,6 +19,9 @@
 	.export		_reset_companion_ability_state
 	.export		_fire_zarnella_lasers
 	.export		_draw_zarnella_lasers
+	.export		_get_romance_winner
+	.export		_affection_bonus
+	.export		_get_picks_for_winner
 	.import		_oam_meta_spr
 	.import		_one_vram_buffer
 	.import		_multi_vram_buffer_horz
@@ -36,6 +39,9 @@
 	.import		_player_x
 	.import		_player_y
 	.import		_player_score
+	.import		_zarnella_picks
+	.import		_luma_picks
+	.import		_bubbles_picks
 	.import		_special_bullet_sprite
 	.import		_display_blinking_message
 	.import		_enemy_x
@@ -261,7 +267,7 @@ L0004:	rts
 .endproc
 
 ; ---------------------------------------------------------------
-; void __near__ handle_selection_arrow (void)
+; void __near__ handle_selection_arrow (unsigned char allow_all)
 ; ---------------------------------------------------------------
 
 .segment	"CODE"
@@ -271,14 +277,18 @@ L0004:	rts
 .segment	"CODE"
 
 ;
+; void handle_selection_arrow(unsigned char allow_all) {
+;
+	jsr     pusha
+;
 ; if ((pad1 & PAD_DOWN) && !(pad1_old & PAD_DOWN)) {
 ;
 	lda     _pad1
 	and     #$04
-	beq     L001F
+	beq     L0020
 	lda     _pad1_old
 	and     #$04
-	bne     L001F
+	bne     L0020
 ;
 ; selected_crewmate = (selected_crewmate + 1) % 3;
 ;
@@ -294,13 +304,16 @@ L0009:	jsr     pushax
 	jsr     tosmoda0
 	sta     _selected_crewmate
 ;
-; } while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
+; } while (!allow_all && selected_crewmate == previous_crewmate && previous_crewmate != 255);
 ;
+	ldy     #$00
+	lda     (sp),y
+	bne     L0020
 	lda     _selected_crewmate
 	jsr     pusha0
 	lda     _previous_crewmate
 	jsr     tosicmp0
-	bne     L001F
+	bne     L0020
 	ldx     #$00
 	lda     _previous_crewmate
 	cmp     #$FF
@@ -308,33 +321,39 @@ L0009:	jsr     pushax
 ;
 ; if ((pad1 & PAD_UP) && !(pad1_old & PAD_UP)) {
 ;
-L001F:	lda     _pad1
+L0020:	lda     _pad1
 	and     #$08
-	beq     L0021
+	beq     L0012
 	lda     _pad1_old
 	and     #$08
-	beq     L0023
-L0021:	rts
+	bne     L0012
 ;
 ; selected_crewmate = (selected_crewmate == 0) ? 2 : selected_crewmate - 1;
 ;
-L0023:	lda     _selected_crewmate
-	bne     L0024
-	lda     #$02
-	jmp     L0025
 L0024:	lda     _selected_crewmate
+	bne     L0025
+	lda     #$02
+	jmp     L0026
+L0025:	lda     _selected_crewmate
 	sec
 	sbc     #$01
-L0025:	sta     _selected_crewmate
+L0026:	sta     _selected_crewmate
 ;
-; } while (selected_crewmate == previous_crewmate && previous_crewmate != 255);
+; } while (!allow_all && selected_crewmate == previous_crewmate && previous_crewmate != 255);
 ;
+	ldy     #$00
+	lda     (sp),y
+	bne     L0012
+	lda     _selected_crewmate
 	cmp     _previous_crewmate
-	bne     L0026
+	bne     L0012
 	lda     _previous_crewmate
 	cmp     #$FF
-	bne     L0023
-L0026:	rts
+	bne     L0024
+;
+; }
+;
+L0012:	jmp     incsp1
 
 .endproc
 
@@ -843,6 +862,160 @@ M0002:
 	.byte	$00
 	.byte	$01
 	.byte	$01
+
+.endproc
+
+; ---------------------------------------------------------------
+; unsigned char __near__ get_romance_winner (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_get_romance_winner: near
+
+.segment	"CODE"
+
+;
+; if (zarnella_picks > luma_picks && zarnella_picks > bubbles_picks) return 0;
+;
+	ldx     #$00
+	lda     _zarnella_picks
+	cmp     _luma_picks
+	bcc     L0010
+	beq     L0010
+	cmp     _bubbles_picks
+	beq     L0010
+	bcc     L0010
+	txa
+	rts
+;
+; if (luma_picks > zarnella_picks && luma_picks > bubbles_picks) return 1;
+;
+L0010:	lda     _luma_picks
+	cmp     _zarnella_picks
+	bcc     L0013
+	beq     L0013
+	cmp     _bubbles_picks
+	beq     L0013
+	bcc     L0013
+	lda     #$01
+	rts
+;
+; if (bubbles_picks > zarnella_picks && bubbles_picks > luma_picks) return 2;
+;
+L0013:	lda     _bubbles_picks
+	cmp     _zarnella_picks
+	bcc     L0016
+	beq     L0016
+	cmp     _luma_picks
+	beq     L0016
+	bcc     L0016
+	lda     #$02
+	rts
+;
+; return selected_crewmate;
+;
+L0016:	lda     _selected_crewmate
+;
+; }
+;
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; unsigned int __near__ affection_bonus (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_affection_bonus: near
+
+.segment	"CODE"
+
+;
+; if (zarnella_picks >= 3 || luma_picks >= 3 || bubbles_picks >= 3) return 350;
+;
+	lda     _zarnella_picks
+	cmp     #$03
+	bcs     L0008
+	lda     _luma_picks
+	cmp     #$03
+	bcs     L0008
+	lda     _bubbles_picks
+	cmp     #$03
+	bcc     L0009
+L0008:	ldx     #$01
+	lda     #$5E
+	rts
+;
+; if (zarnella_picks == 2 || luma_picks == 2 || bubbles_picks == 2) return 100;
+;
+L0009:	lda     _zarnella_picks
+	cmp     #$02
+	beq     L000A
+	lda     _luma_picks
+	cmp     #$02
+	beq     L000A
+	lda     _bubbles_picks
+	cmp     #$02
+	beq     L000A
+	ldx     #$00
+	txa
+	rts
+L000A:	ldx     #$00
+	lda     #$64
+	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; unsigned int __near__ get_picks_for_winner (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_get_picks_for_winner: near
+
+.segment	"CODE"
+
+;
+; unsigned char winner = get_romance_winner();
+;
+	jsr     _get_romance_winner
+	jsr     pusha
+;
+; if (winner == 0) return zarnella_picks;
+;
+	ldx     #$00
+	lda     (sp,x)
+	bne     L0006
+	lda     _zarnella_picks
+	jmp     incsp1
+;
+; if (winner == 1) return luma_picks;
+;
+L0006:	lda     (sp,x)
+	cmp     #$01
+	bne     L0008
+	lda     _luma_picks
+	jmp     incsp1
+;
+; if (winner == 2) return bubbles_picks;
+;
+L0008:	lda     (sp,x)
+	cmp     #$02
+	bne     L0009
+	lda     _bubbles_picks
+	jmp     incsp1
+;
+; return 0; // Failsafe
+;
+L0009:	txa
+;
+; }
+;
+	jmp     incsp1
 
 .endproc
 

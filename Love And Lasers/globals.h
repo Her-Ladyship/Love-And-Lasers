@@ -59,6 +59,7 @@ struct Bullet {
 extern unsigned char game_state;
 extern unsigned char current_level;
 extern unsigned char i, j;
+extern unsigned char briefing_started;
 extern unsigned char selected_crewmate;
 extern unsigned char previous_crewmate;
 extern unsigned char shmup_screen_drawn, shmup_started;
@@ -94,7 +95,12 @@ extern char timer_string[10];
 extern unsigned char typewriter_step;
 extern unsigned char typewriter_line;
 extern unsigned char typewriter_ended;
-extern unsigned char briefing_started;
+
+extern unsigned char zarnella_picks;
+extern unsigned char luma_picks;
+extern unsigned char bubbles_picks;
+
+extern unsigned int total_romance_score;
 
 extern struct Box bullet_box;
 extern struct Box enemy_box;
