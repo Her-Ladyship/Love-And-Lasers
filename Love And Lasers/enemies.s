@@ -21,13 +21,27 @@
 	.export		_spawn_tough
 	.export		_update_enemies
 	.export		_clear_all_enemies
+	.export		_spawn_boss
+	.export		_update_boss
+	.export		_spawn_boss_bullet
 	.import		_i
 	.import		_frame_count
+	.import		_boss_active
+	.import		_boss_health
+	.import		_boss_x
+	.import		_boss_y
+	.import		_boss_attack_mode
+	.import		_boss_fire_timer
+	.import		_boss_bullet_x
+	.import		_boss_bullet_y
+	.import		_boss_bullet_active
 	.import		_enemy_type
 	.import		_enemy_health
 	.import		_enemy_sprite_basic
 	.import		_enemy_sprite_fast
 	.import		_enemy_sprite_tough
+	.import		_boss_bullet_sprite
+	.import		_boss_sprite
 
 .segment	"BSS"
 
@@ -536,6 +550,358 @@ L0008:	lda     _i
 ; }
 ;
 L0003:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ spawn_boss (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_spawn_boss: near
+
+.segment	"CODE"
+
+;
+; boss_active = 1;
+;
+	lda     #$01
+	sta     _boss_active
+;
+; boss_health = 20;
+;
+	lda     #$14
+	sta     _boss_health
+;
+; boss_x = 216;
+;
+	lda     #$D8
+	sta     _boss_x
+;
+; boss_y = 100;
+;
+	lda     #$64
+	sta     _boss_y
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+	lda     #$00
+	sta     _i
+L0007:	lda     _i
+	cmp     #$0A
+	bcs     L0003
+;
+; boss_bullet_active[i] = 0;
+;
+	ldy     _i
+	lda     #$00
+	sta     _boss_bullet_active,y
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+	inc     _i
+	jmp     L0007
+;
+; }
+;
+L0003:	rts
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ update_boss (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_update_boss: near
+
+.segment	"CODE"
+
+;
+; if (!boss_active) return;
+;
+	lda     _boss_active
+	bne     L0032
+;
+; }
+;
+	rts
+;
+; oam_meta_spr(boss_x, boss_y, boss_sprite);
+;
+L0032:	jsr     decsp2
+	lda     _boss_x
+	ldy     #$01
+	sta     (sp),y
+	lda     _boss_y
+	dey
+	sta     (sp),y
+	lda     #<(_boss_sprite)
+	ldx     #>(_boss_sprite)
+	jsr     _oam_meta_spr
+;
+; if (frame_count % 120 == 0) {
+;
+	lda     _frame_count
+	jsr     pusha0
+	lda     #$78
+	jsr     tosumoda0
+	cpx     #$00
+	bne     L0003
+	cmp     #$00
+	bne     L0003
+;
+; boss_attack_mode = (boss_attack_mode + 1) % 3;  // Cycle between 0, 1, 2
+;
+	lda     _boss_attack_mode
+	clc
+	adc     #$01
+	bcc     L0005
+	inx
+L0005:	jsr     pushax
+	ldx     #$00
+	lda     #$03
+	jsr     tosmoda0
+	sta     _boss_attack_mode
+;
+; if (boss_fire_timer > 0) {
+;
+L0003:	lda     _boss_fire_timer
+	beq     L0025
+;
+; boss_fire_timer--;
+;
+	dec     _boss_fire_timer
+;
+; } else {
+;
+	jmp     L0029
+;
+; if (boss_attack_mode == 0) {
+;
+L0025:	lda     _boss_attack_mode
+	bne     L0026
+;
+; spawn_boss_bullet(boss_y + 16);
+;
+	lda     _boss_y
+	clc
+	adc     #$10
+;
+; } else if (boss_attack_mode == 1) {
+;
+	jmp     L0024
+L0026:	lda     _boss_attack_mode
+	cmp     #$01
+	bne     L0027
+;
+; spawn_boss_bullet(boss_y + 8);
+;
+	lda     _boss_y
+	clc
+	adc     #$08
+;
+; } else if (boss_attack_mode == 2) {
+;
+	jmp     L0031
+L0027:	lda     _boss_attack_mode
+	cmp     #$02
+	bne     L0028
+;
+; spawn_boss_bullet(boss_y);
+;
+	lda     _boss_y
+	jsr     _spawn_boss_bullet
+;
+; spawn_boss_bullet(boss_y + 16);
+;
+	lda     _boss_y
+	clc
+	adc     #$10
+L0031:	jsr     _spawn_boss_bullet
+;
+; spawn_boss_bullet(boss_y + 32);
+;
+	lda     _boss_y
+	clc
+	adc     #$20
+L0024:	jsr     _spawn_boss_bullet
+;
+; boss_fire_timer = 60;
+;
+L0028:	lda     #$3C
+	sta     _boss_fire_timer
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+L0029:	lda     #$00
+	sta     _i
+L002A:	lda     _i
+	cmp     #$0A
+	bcs     L002C
+;
+; if (boss_bullet_active[i]) {
+;
+	ldy     _i
+	lda     _boss_bullet_active,y
+	beq     L002B
+;
+; boss_bullet_x[i] -= 2;
+;
+	lda     #<(_boss_bullet_x)
+	ldx     #>(_boss_bullet_x)
+	clc
+	adc     _i
+	bcc     L0018
+	inx
+L0018:	sta     ptr1
+	stx     ptr1+1
+	ldy     #$00
+	lda     (ptr1),y
+	sec
+	sbc     #$02
+	sta     (ptr1),y
+;
+; if (boss_bullet_x[i] <= 8) {
+;
+	ldy     _i
+	lda     _boss_bullet_x,y
+	cmp     #$09
+	bcs     L0019
+;
+; boss_bullet_active[i] = 0;
+;
+	ldy     _i
+	lda     #$00
+	sta     _boss_bullet_active,y
+;
+; } else {
+;
+	jmp     L002B
+;
+; oam_meta_spr(boss_bullet_x[i], boss_bullet_y[i], boss_bullet_sprite);
+;
+L0019:	jsr     decsp2
+	ldy     _i
+	lda     _boss_bullet_x,y
+	ldy     #$01
+	sta     (sp),y
+	ldy     _i
+	lda     _boss_bullet_y,y
+	ldy     #$00
+	sta     (sp),y
+	lda     #<(_boss_bullet_sprite)
+	ldx     #>(_boss_bullet_sprite)
+	jsr     _oam_meta_spr
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+L002B:	inc     _i
+	jmp     L002A
+;
+; if (frame_count % 4 == 0) {  // Slow down movement speed
+;
+L002C:	lda     _frame_count
+	and     #$03
+	bne     L0021
+;
+; boss_y += boss_direction;
+;
+	lda     M0001
+	clc
+	adc     _boss_y
+	sta     _boss_y
+;
+; if (boss_y <= PLAYFIELD_TOP || boss_y >= PLAYFIELD_BOTTOM - 32) {  // Adjust based on boss height
+;
+	cmp     #$31
+	bcc     L002D
+	lda     _boss_y
+	cmp     #$A0
+	bcs     L002D
+	rts
+;
+; boss_direction = -boss_direction;
+;
+L002D:	lda     M0001
+	eor     #$FF
+	clc
+	adc     #$01
+	sta     M0001
+;
+; }
+;
+L0021:	rts
+
+.segment	"DATA"
+
+M0001:
+	.byte	$01
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ spawn_boss_bullet (unsigned char y_position)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_spawn_boss_bullet: near
+
+.segment	"CODE"
+
+;
+; void spawn_boss_bullet(unsigned char y_position) {
+;
+	jsr     pusha
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+	lda     #$00
+	sta     _i
+L000B:	lda     _i
+	cmp     #$0A
+	bcs     L0003
+;
+; if (!boss_bullet_active[i]) {
+;
+	ldy     _i
+	lda     _boss_bullet_active,y
+	bne     L000C
+;
+; boss_bullet_active[i] = 1;
+;
+	ldy     _i
+	lda     #$01
+	sta     _boss_bullet_active,y
+;
+; boss_bullet_x[i] = boss_x;
+;
+	ldy     _i
+	lda     _boss_x
+	sta     _boss_bullet_x,y
+;
+; boss_bullet_y[i] = y_position;
+;
+	ldy     #$00
+	lda     (sp),y
+	ldy     _i
+	sta     _boss_bullet_y,y
+;
+; break;  // Only spawn one bullet at a time
+;
+	jmp     incsp1
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+L000C:	inc     _i
+	jmp     L000B
+;
+; }
+;
+L0003:	jmp     incsp1
 
 .endproc
 

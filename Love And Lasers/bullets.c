@@ -4,6 +4,7 @@
 #include "lib/nesdoug.h"
 #include "globals.h"
 #include "enemies.h"
+#include "levels.h"
 
 void spawn_bullets(void) {
 	if ((pad1 & PAD_A) && !(pad1_old & PAD_A)) {
@@ -42,9 +43,8 @@ void clear_all_bullets(void) {
 }
 
 void enemy_killed_check(void) {
-	// === Check bullets (staggered) ===
 	for (i = 0; i < MAX_BULLETS; ++i) {
-		if (i % 2 != (frame_count % 2)) continue; // skip this bullet this frame
+		if (i % 2 != (frame_count % 2)) continue;
 
 		if (bullets[i].active) {
 			for (j = 0; j < MAX_ENEMIES; ++j) {
@@ -63,7 +63,6 @@ void enemy_killed_check(void) {
 					    player_score += (enemy_type[j] == ENEMY_TYPE_TOUGH) ? 50 :
 					                    (enemy_type[j] == ENEMY_TYPE_FAST) ? 20 : 10;
 						}
-						enemy_frozen[j] = 0;
 						break;
 					}
 				}
@@ -71,3 +70,55 @@ void enemy_killed_check(void) {
 		}
 	}
 }
+
+void check_boss_hit(void) {
+    if (!boss_active) return;
+
+    for (i = 0; i < MAX_BULLETS; ++i) {
+        if (bullets[i].active) {
+			if ((bullets[i].x >= boss_x) && (bullets[i].x <= boss_x + 6) &&
+			    (bullets[i].y >= boss_y) && (bullets[i].y <= boss_y + 40)) {
+                bullets[i].active = 0;
+                if (boss_health > 1) {
+                    boss_health--;
+                } else {
+                    ppu_off();
+                    boss_active = 0;
+                    player_score += 500;
+					shmup_screen_drawn = 0;
+					shmup_started = 0;
+					init_level(current_level + 1);
+					on_level_complete();
+					ppu_on_all();
+                }
+                break;
+            }
+        }
+    }
+}
+
+void check_boss_bullet_hit(void) {
+    if (!boss_active) return;
+
+    for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+        if (boss_bullet_active[i]) {
+            if ((player_x > boss_bullet_x[i] ? player_x - boss_bullet_x[i] : boss_bullet_x[i] - player_x) < 6 &&
+                (player_y > boss_bullet_y[i] ? player_y - boss_bullet_y[i] : boss_bullet_y[i] - player_y) < 6) {
+
+                boss_bullet_active[i] = 0;
+
+                if (!player_invincible) {
+                    if (player_health > 0) {
+                        player_health--;
+                    }
+                }
+
+                if (player_health == 0) {
+                    on_player_death();
+                }
+                break;  // Only one bullet hit per frame
+            }
+        }
+    }
+}
+

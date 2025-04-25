@@ -94,3 +94,77 @@ void clear_all_enemies(void) {
 		enemy_frozen[i] = 0;
 	}
 }
+
+void spawn_boss(void) {
+    boss_active = 1;
+    boss_health = 20;
+    boss_x = 216;
+    boss_y = 100;
+
+    for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+        boss_bullet_active[i] = 0;
+    }
+}
+
+void update_boss(void) {
+	static char boss_direction = 1;
+
+    if (!boss_active) return;
+
+    // Draw the boss
+    oam_meta_spr(boss_x, boss_y, boss_sprite);
+
+	if (frame_count % 120 == 0) {
+    	boss_attack_mode = (boss_attack_mode + 1) % 3;  // Cycle between 0, 1, 2
+	}
+
+	// Then in your shooting logic:
+	if (boss_fire_timer > 0) {
+    	boss_fire_timer--;
+	} else {
+    	// Time to fire!
+	    if (boss_attack_mode == 0) {
+    	    spawn_boss_bullet(boss_y + 16);
+	    } else if (boss_attack_mode == 1) {
+	        spawn_boss_bullet(boss_y + 8);
+	        spawn_boss_bullet(boss_y + 32);
+	    } else if (boss_attack_mode == 2) {
+	        spawn_boss_bullet(boss_y);
+	        spawn_boss_bullet(boss_y + 16);
+        	spawn_boss_bullet(boss_y + 32);
+    	}
+
+    boss_fire_timer = 60;
+	}
+
+    // Move boss bullets
+    for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+        if (boss_bullet_active[i]) {
+            boss_bullet_x[i] -= 2;
+            if (boss_bullet_x[i] <= 8) {
+                boss_bullet_active[i] = 0;
+            } else {
+                oam_meta_spr(boss_bullet_x[i], boss_bullet_y[i], boss_bullet_sprite);
+            }
+        }
+    }
+
+	if (frame_count % 4 == 0) {  // Slow down movement speed
+	    boss_y += boss_direction;
+	    if (boss_y <= PLAYFIELD_TOP || boss_y >= PLAYFIELD_BOTTOM - 32) {  // Adjust based on boss height
+	        boss_direction = -boss_direction;
+	    }
+	}
+}
+
+void spawn_boss_bullet(unsigned char y_position) {
+    for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+        if (!boss_bullet_active[i]) {
+            boss_bullet_active[i] = 1;
+            boss_bullet_x[i] = boss_x;
+            boss_bullet_y[i] = y_position;
+            break;  // Only spawn one bullet at a time
+        }
+    }
+}
+

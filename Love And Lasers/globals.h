@@ -32,6 +32,8 @@
 #define WRITE(text, x, y) multi_vram_buffer_horz(text, sizeof(text)-1, NTADR_A(x, y))
 #define BLINK_MSG(msg, x, y) display_blinking_message(msg, sizeof(msg)-1, x, y)
 
+#define MAX_BOSS_BULLETS 10
+
 // === ENUMS ===
 enum GameState {
   STATE_TITLE,
@@ -88,6 +90,17 @@ extern unsigned char bullet_y[MAX_BULLETS];
 extern unsigned char bullet_active[MAX_BULLETS];
 extern struct Bullet bullets[MAX_BULLETS];
 
+extern unsigned char boss_active;
+extern unsigned char boss_health;
+extern unsigned char boss_x;
+extern unsigned char boss_y;
+extern unsigned char boss_attack_mode;
+extern unsigned char boss_fire_timer;
+
+extern unsigned char boss_bullet_x[MAX_BOSS_BULLETS];
+extern unsigned char boss_bullet_y[MAX_BOSS_BULLETS];
+extern unsigned char boss_bullet_active[MAX_BOSS_BULLETS];
+
 extern unsigned int freeze_timer;
 
 extern unsigned int player_score;
@@ -112,6 +125,9 @@ extern struct Box enemy_box;
 extern unsigned char enemy_type[MAX_ENEMIES];
 extern unsigned char enemy_health[MAX_ENEMIES];
 
+extern unsigned char tens;
+extern unsigned char ones;
+
 // === SPRITES ===
 extern const unsigned char player_sprite[];
 extern const unsigned char bullet_sprite[];
@@ -122,6 +138,9 @@ extern const unsigned char enemy_sprite_basic[];
 extern const unsigned char enemy_sprite_fast[];
 extern const unsigned char enemy_sprite_tough[];
 extern const unsigned char* enemy_sprites[3];
+
+extern const unsigned char boss_bullet_sprite[];
+extern const unsigned char boss_sprite[];
 
 extern const unsigned char palette[];
 

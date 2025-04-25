@@ -10,6 +10,13 @@ void draw_hud(void) {
 	WRITE(score_string, 10, 1);
 	update_timer_string();
 	WRITE(timer_string, 2, 27);
+	if (boss_active) {
+    	WRITE("BOSS HP: ", 18, 27);
+    	tens = boss_health / 10;
+    	ones = boss_health % 10;
+    	one_vram_buffer('0' + tens, NTADR_A(27, 27));
+    	one_vram_buffer('0' + ones, NTADR_A(28, 27));
+	}
 }
 
 void update_score_string(void) {

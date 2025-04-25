@@ -164,8 +164,6 @@ void main(void) {
 				spawn_bullets();
 				update_regular_bullets();
 
-				//spawn_enemies();
-
 				if (current_level == 1) {
 					spawn_basic();
 				}
@@ -175,10 +173,16 @@ void main(void) {
 				else if (current_level == 3) {
 					spawn_tough();
 				}
-
+				else if (current_level == 4 && !boss_active) {
+				    spawn_boss();
+				}
+    
 				update_enemies();
+				update_boss();
 
 				enemy_killed_check();
+				check_boss_hit();
+				check_boss_bullet_hit();
 				check_player_hit();
 
 				if ((pad1 & PAD_B) && !(pad1_old & PAD_B)) {
@@ -256,6 +260,7 @@ void main(void) {
 			if (!ending_shown) {
 				total_romance_score = player_score + (get_picks_for_winner() * 50) + affection_bonus();
 				ending_shown = 1;
+				boss_active = 0;
 			}
 
 			show_romance_ending();
@@ -303,6 +308,7 @@ void main(void) {
 				typewriter_reset();
 				current_level = 1;
 				init_level(1);
+				boss_active = 0;
 
 				game_state = STATE_TITLE;
 				ppu_on_all();

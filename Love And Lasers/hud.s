@@ -15,6 +15,7 @@
 	.export		_update_timer_string
 	.export		_draw_ability_cooldown_bar
 	.export		_get_current_cooldown_max
+	.import		_one_vram_buffer
 	.import		_multi_vram_buffer_horz
 	.import		_i
 	.import		_selected_crewmate
@@ -22,10 +23,19 @@
 	.import		_hp_string
 	.import		_ability_cooldown_timer
 	.import		_player_health
+	.import		_boss_active
+	.import		_boss_health
 	.import		_player_score
 	.import		_score_string
 	.import		_shmup_timer
 	.import		_timer_string
+	.import		_tens
+	.import		_ones
+
+.segment	"RODATA"
+
+S0001:
+	.byte	$42,$4F,$53,$53,$20,$48,$50,$3A,$20,$00
 
 ; ---------------------------------------------------------------
 ; void __near__ draw_hud (void)
@@ -99,7 +109,68 @@
 	sta     (sp),y
 	ldx     #$23
 	lda     #$62
-	jmp     _multi_vram_buffer_horz
+	jsr     _multi_vram_buffer_horz
+;
+; if (boss_active) {
+;
+	lda     _boss_active
+	beq     L0003
+;
+; WRITE("BOSS HP: ", 18, 27);
+;
+	jsr     decsp3
+	lda     #<(S0001)
+	ldy     #$01
+	sta     (sp),y
+	iny
+	lda     #>(S0001)
+	sta     (sp),y
+	lda     #$09
+	ldy     #$00
+	sta     (sp),y
+	ldx     #$23
+	lda     #$72
+	jsr     _multi_vram_buffer_horz
+;
+; tens = boss_health / 10;
+;
+	lda     _boss_health
+	jsr     pusha0
+	lda     #$0A
+	jsr     tosudiva0
+	sta     _tens
+;
+; ones = boss_health % 10;
+;
+	lda     _boss_health
+	jsr     pusha0
+	lda     #$0A
+	jsr     tosumoda0
+	sta     _ones
+;
+; one_vram_buffer('0' + tens, NTADR_A(27, 27));
+;
+	lda     _tens
+	clc
+	adc     #$30
+	jsr     pusha
+	ldx     #$23
+	lda     #$7B
+	jsr     _one_vram_buffer
+;
+; one_vram_buffer('0' + ones, NTADR_A(28, 27));
+;
+	lda     _ones
+	clc
+	adc     #$30
+	jsr     pusha
+	ldx     #$23
+	lda     #$7C
+	jmp     _one_vram_buffer
+;
+; }
+;
+L0003:	rts
 
 .endproc
 

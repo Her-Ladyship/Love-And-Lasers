@@ -37,6 +37,15 @@
 	.export		_bullet_y
 	.export		_bullet_active
 	.export		_bullets
+	.export		_boss_active
+	.export		_boss_health
+	.export		_boss_x
+	.export		_boss_y
+	.export		_boss_attack_mode
+	.export		_boss_fire_timer
+	.export		_boss_bullet_x
+	.export		_boss_bullet_y
+	.export		_boss_bullet_active
 	.export		_freeze_timer
 	.export		_player_score
 	.export		_score_string
@@ -53,6 +62,8 @@
 	.export		_enemy_box
 	.export		_enemy_type
 	.export		_enemy_health
+	.export		_tens
+	.export		_ones
 	.export		_player_sprite
 	.export		_bullet_sprite
 	.export		_special_bullet_sprite
@@ -60,14 +71,16 @@
 	.export		_enemy_sprite_fast
 	.export		_enemy_sprite_tough
 	.export		_enemy_sprites
+	.export		_boss_bullet_sprite
+	.export		_boss_sprite
 	.export		_palette
 
 .segment	"DATA"
 
 _game_state:
-	.byte	$00
+	.byte	$03
 _current_level:
-	.byte	$01
+	.byte	$04
 _i:
 	.byte	$00
 _j:
@@ -106,6 +119,18 @@ _player_y:
 	.byte	$78
 _player_health:
 	.byte	$03
+_boss_active:
+	.byte	$00
+_boss_health:
+	.byte	$14
+_boss_x:
+	.byte	$D8
+_boss_y:
+	.byte	$64
+_boss_attack_mode:
+	.byte	$00
+_boss_fire_timer:
+	.byte	$00
 _freeze_timer:
 	.word	$0000
 _player_score:
@@ -130,6 +155,10 @@ _bubbles_picks:
 	.byte	$00
 _total_romance_score:
 	.word	$0000
+_tens:
+	.byte	$00
+_ones:
+	.byte	$00
 _enemy_sprites:
 	.addr	_enemy_sprite_basic
 	.addr	_enemy_sprite_fast
@@ -146,13 +175,13 @@ _player_sprite:
 _bullet_sprite:
 	.byte	$00
 	.byte	$00
-	.byte	$42
+	.byte	$2D
 	.byte	$00
 	.byte	$80
 _special_bullet_sprite:
 	.byte	$00
 	.byte	$00
-	.byte	$66
+	.byte	$3E
 	.byte	$00
 	.byte	$80
 _enemy_sprite_basic:
@@ -170,27 +199,115 @@ _enemy_sprite_fast:
 _enemy_sprite_tough:
 	.byte	$00
 	.byte	$00
-	.byte	$51
+	.byte	$5B
 	.byte	$00
 	.byte	$08
 	.byte	$00
-	.byte	$51
+	.byte	$5C
 	.byte	$00
 	.byte	$00
 	.byte	$08
-	.byte	$51
+	.byte	$5B
 	.byte	$00
 	.byte	$08
 	.byte	$08
-	.byte	$51
+	.byte	$5C
 	.byte	$00
 	.byte	$00
 	.byte	$10
-	.byte	$51
+	.byte	$5B
 	.byte	$00
 	.byte	$08
 	.byte	$10
-	.byte	$51
+	.byte	$5C
+	.byte	$00
+	.byte	$80
+_boss_bullet_sprite:
+	.byte	$00
+	.byte	$00
+	.byte	$7E
+	.byte	$00
+	.byte	$80
+_boss_sprite:
+	.byte	$00
+	.byte	$00
+	.byte	$42
+	.byte	$00
+	.byte	$08
+	.byte	$00
+	.byte	$4F
+	.byte	$00
+	.byte	$10
+	.byte	$00
+	.byte	$53
+	.byte	$00
+	.byte	$18
+	.byte	$00
+	.byte	$53
+	.byte	$00
+	.byte	$00
+	.byte	$08
+	.byte	$42
+	.byte	$00
+	.byte	$08
+	.byte	$08
+	.byte	$4F
+	.byte	$00
+	.byte	$10
+	.byte	$08
+	.byte	$53
+	.byte	$00
+	.byte	$18
+	.byte	$08
+	.byte	$53
+	.byte	$00
+	.byte	$00
+	.byte	$10
+	.byte	$42
+	.byte	$00
+	.byte	$08
+	.byte	$10
+	.byte	$4F
+	.byte	$00
+	.byte	$10
+	.byte	$10
+	.byte	$53
+	.byte	$00
+	.byte	$18
+	.byte	$10
+	.byte	$53
+	.byte	$00
+	.byte	$00
+	.byte	$18
+	.byte	$42
+	.byte	$00
+	.byte	$08
+	.byte	$18
+	.byte	$4F
+	.byte	$00
+	.byte	$10
+	.byte	$18
+	.byte	$53
+	.byte	$00
+	.byte	$18
+	.byte	$18
+	.byte	$53
+	.byte	$00
+	.byte	$00
+	.byte	$20
+	.byte	$42
+	.byte	$00
+	.byte	$08
+	.byte	$20
+	.byte	$4F
+	.byte	$00
+	.byte	$10
+	.byte	$20
+	.byte	$53
+	.byte	$00
+	.byte	$18
+	.byte	$20
+	.byte	$53
 	.byte	$00
 	.byte	$80
 _palette:
@@ -225,6 +342,12 @@ _bullet_active:
 	.res	3,$00
 _bullets:
 	.res	15,$00
+_boss_bullet_x:
+	.res	10,$00
+_boss_bullet_y:
+	.res	10,$00
+_boss_bullet_active:
+	.res	10,$00
 _bullet_box:
 	.res	4,$00
 _enemy_box:

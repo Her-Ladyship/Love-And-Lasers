@@ -22,4 +22,8 @@ void spawn_tough(void);
 void update_enemies(void);
 void clear_all_enemies(void);
 
+void spawn_boss(void);
+void update_boss(void);
+void spawn_boss_bullet(unsigned char y_position);
+
 #endif

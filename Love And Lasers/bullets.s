@@ -14,15 +14,31 @@
 	.export		_update_regular_bullets
 	.export		_clear_all_bullets
 	.export		_enemy_killed_check
+	.export		_check_boss_hit
+	.export		_check_boss_bullet_hit
+	.import		_ppu_off
+	.import		_ppu_on_all
 	.import		_oam_meta_spr
+	.import		_current_level
 	.import		_i
 	.import		_j
+	.import		_shmup_screen_drawn
+	.import		_shmup_started
 	.import		_frame_count
 	.import		_pad1
 	.import		_pad1_old
+	.import		_player_invincible
 	.import		_player_x
 	.import		_player_y
+	.import		_player_health
 	.import		_bullets
+	.import		_boss_active
+	.import		_boss_health
+	.import		_boss_x
+	.import		_boss_y
+	.import		_boss_bullet_x
+	.import		_boss_bullet_y
+	.import		_boss_bullet_active
 	.import		_player_score
 	.import		_enemy_type
 	.import		_enemy_health
@@ -30,7 +46,9 @@
 	.import		_enemy_x
 	.import		_enemy_y
 	.import		_enemy_active
-	.import		_enemy_frozen
+	.import		_init_level
+	.import		_on_level_complete
+	.import		_on_player_death
 
 ; ---------------------------------------------------------------
 ; void __near__ spawn_bullets (void)
@@ -421,22 +439,22 @@ L0003:	rts
 ;
 	lda     #$00
 	sta     _i
-L0030:	lda     _i
+L002F:	lda     _i
 	cmp     #$03
-	bcc     L003E
+	bcc     L003D
 ;
 ; }
 ;
 	rts
 ;
-; if (i % 2 != (frame_count % 2)) continue; // skip this bullet this frame
+; if (i % 2 != (frame_count % 2)) continue;
 ;
-L003E:	and     #$01
+L003D:	and     #$01
 	sta     ptr1
 	lda     _frame_count
 	and     #$01
 	cmp     ptr1
-	jne     L003D
+	jne     L003C
 ;
 ; if (bullets[i].active) {
 ;
@@ -451,25 +469,25 @@ L003E:	and     #$01
 	sta     ptr1+1
 	ldy     #$04
 	lda     (ptr1),y
-	jeq     L003D
+	jeq     L003C
 ;
 ; for (j = 0; j < MAX_ENEMIES; ++j) {
 ;
 	lda     #$00
 	sta     _j
-L0031:	lda     _j
+L0030:	lda     _j
 	cmp     #$06
-	jcs     L003D
+	jcs     L003C
 ;
 ; if (enemy_active[j] && enemy_x[j] <= 240) {
 ;
 	ldy     _j
 	lda     _enemy_active,y
-	jeq     L003C
+	jeq     L003B
 	ldy     _j
 	lda     _enemy_x,y
 	cmp     #$F1
-	jcs     L003C
+	jcs     L003B
 ;
 ; unsigned char target_y = enemy_y[j];
 ;
@@ -483,7 +501,7 @@ L0031:	lda     _j
 	ldx     #$00
 	lda     _enemy_type,y
 	cmp     #$02
-	bne     L0035
+	bne     L0034
 ;
 ; target_y += 8;  // Aim for the middle tile!
 ;
@@ -495,7 +513,7 @@ L0031:	lda     _j
 ;
 ; if ((bullets[i].x > enemy_x[j] ? bullets[i].x - enemy_x[j] : enemy_x[j] - bullets[i].x) < 6 &&
 ;
-L0035:	lda     _i
+L0034:	lda     _i
 	jsr     mulax5
 	sta     ptr1
 	txa
@@ -561,8 +579,8 @@ L001B:	jpl     L0015
 	lda     (ptr1),y
 	dey
 	cmp     (sp),y
-	bcc     L0037
-	beq     L0037
+	bcc     L0036
+	beq     L0036
 	lda     _i
 	jsr     mulax5
 	clc
@@ -580,7 +598,7 @@ L001B:	jpl     L0015
 	bcs     L001E
 	dex
 	jmp     L001E
-L0037:	lda     (sp),y
+L0036:	lda     (sp),y
 	jsr     pusha0
 	lda     _i
 	jsr     mulax5
@@ -664,10 +682,10 @@ L0022:	ldy     _j
 L0028:	ldy     _j
 	lda     _enemy_type,y
 	cmp     #$01
-	bne     L003B
+	bne     L003A
 	lda     #$14
 	jmp     L002C
-L003B:	lda     #$0A
+L003A:	lda     #$0A
 L002C:	clc
 	adc     _player_score
 	sta     _player_score
@@ -675,16 +693,10 @@ L002C:	clc
 	adc     _player_score+1
 	sta     _player_score+1
 ;
-; enemy_frozen[j] = 0;
-;
-L0025:	ldy     _j
-	lda     #$00
-	sta     _enemy_frozen,y
-;
 ; break;
 ;
-	jsr     incsp1
-	jmp     L003D
+L0025:	jsr     incsp1
+	jmp     L003C
 ;
 ; }
 ;
@@ -692,13 +704,338 @@ L0015:	jsr     incsp1
 ;
 ; for (j = 0; j < MAX_ENEMIES; ++j) {
 ;
-L003C:	inc     _j
-	jmp     L0031
+L003B:	inc     _j
+	jmp     L0030
 ;
 ; for (i = 0; i < MAX_BULLETS; ++i) {
 ;
-L003D:	inc     _i
-	jmp     L0030
+L003C:	inc     _i
+	jmp     L002F
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ check_boss_hit (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_check_boss_hit: near
+
+.segment	"CODE"
+
+;
+; if (!boss_active) return;
+;
+	lda     _boss_active
+	bne     L0015
+;
+; }
+;
+	rts
+;
+; for (i = 0; i < MAX_BULLETS; ++i) {
+;
+L0015:	lda     #$00
+	sta     _i
+L0012:	lda     _i
+	cmp     #$03
+	bcc     L0016
+;
+; }
+;
+	rts
+;
+; if (bullets[i].active) {
+;
+L0016:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$04
+	lda     (ptr1),y
+	jeq     L0014
+;
+; if ((bullets[i].x >= boss_x) && (bullets[i].x <= boss_x + 6) &&
+;
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #<(_bullets)
+	lda     (ptr1),y
+	cmp     _boss_x
+	jcc     L0014
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	sta     ptr1
+	txa
+	clc
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #<(_bullets)
+	lda     (ptr1),y
+	jsr     pusha0
+	lda     _boss_x
+	clc
+	adc     #$06
+	bcc     L000A
+	ldx     #$01
+L000A:	jsr     tosicmp
+	beq     L0011
+	jpl     L0014
+;
+; (bullets[i].y >= boss_y) && (bullets[i].y <= boss_y + 40)) {
+;
+L0011:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	cmp     _boss_y
+	bcc     L0014
+	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     (ptr1),y
+	jsr     pusha0
+	lda     _boss_y
+	clc
+	adc     #$28
+	bcc     L000B
+	ldx     #$01
+L000B:	jsr     tosicmp
+	bmi     L000C
+	bne     L0014
+;
+; bullets[i].active = 0;
+;
+L000C:	ldx     #$00
+	lda     _i
+	jsr     mulax5
+	clc
+	adc     #<(_bullets)
+	sta     ptr1
+	txa
+	adc     #>(_bullets)
+	sta     ptr1+1
+	lda     #$00
+	ldy     #$04
+	sta     (ptr1),y
+;
+; if (boss_health > 1) {
+;
+	lda     _boss_health
+	cmp     #$02
+	bcc     L000E
+;
+; boss_health--;
+;
+	dec     _boss_health
+;
+; } else {
+;
+	rts
+;
+; ppu_off();
+;
+L000E:	jsr     _ppu_off
+;
+; boss_active = 0;
+;
+	lda     #$00
+	sta     _boss_active
+;
+; player_score += 500;
+;
+	lda     #$F4
+	clc
+	adc     _player_score
+	sta     _player_score
+	lda     #$01
+	adc     _player_score+1
+	sta     _player_score+1
+;
+; shmup_screen_drawn = 0;
+;
+	lda     #$00
+	sta     _shmup_screen_drawn
+;
+; shmup_started = 0;
+;
+	sta     _shmup_started
+;
+; init_level(current_level + 1);
+;
+	lda     _current_level
+	clc
+	adc     #$01
+	jsr     _init_level
+;
+; on_level_complete();
+;
+	jsr     _on_level_complete
+;
+; ppu_on_all();
+;
+	jmp     _ppu_on_all
+;
+; for (i = 0; i < MAX_BULLETS; ++i) {
+;
+L0014:	inc     _i
+	jmp     L0012
+
+.endproc
+
+; ---------------------------------------------------------------
+; void __near__ check_boss_bullet_hit (void)
+; ---------------------------------------------------------------
+
+.segment	"CODE"
+
+.proc	_check_boss_bullet_hit: near
+
+.segment	"CODE"
+
+;
+; if (!boss_active) return;
+;
+	lda     _boss_active
+	bne     L002B
+;
+; }
+;
+	rts
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+L002B:	lda     #$00
+	sta     _i
+L0021:	lda     _i
+	cmp     #$0A
+	bcc     L002C
+;
+; }
+;
+	rts
+;
+; if (boss_bullet_active[i]) {
+;
+L002C:	ldy     _i
+	lda     _boss_bullet_active,y
+	jeq     L0026
+;
+; if ((player_x > boss_bullet_x[i] ? player_x - boss_bullet_x[i] : boss_bullet_x[i] - player_x) < 6 &&
+;
+	lda     _player_x
+	ldy     _i
+	cmp     _boss_bullet_x,y
+	bcc     L000B
+	beq     L000B
+	lda     _player_x
+	sec
+	ldy     _i
+	sbc     _boss_bullet_x,y
+	jmp     L0029
+L000B:	ldy     _i
+	lda     _boss_bullet_x,y
+	sec
+	sbc     _player_x
+L0029:	ldx     #$00
+	bcs     L000D
+	dex
+L000D:	cmp     #$06
+	txa
+	sbc     #$00
+	bvc     L000F
+	eor     #$80
+L000F:	bpl     L0026
+;
+; (player_y > boss_bullet_y[i] ? player_y - boss_bullet_y[i] : boss_bullet_y[i] - player_y) < 6) {
+;
+	lda     _player_y
+	ldy     _i
+	cmp     _boss_bullet_y,y
+	bcc     L0012
+	beq     L0012
+	lda     _player_y
+	sec
+	ldy     _i
+	sbc     _boss_bullet_y,y
+	jmp     L002A
+L0012:	ldy     _i
+	lda     _boss_bullet_y,y
+	sec
+	sbc     _player_y
+L002A:	ldx     #$00
+	bcs     L0014
+	dex
+L0014:	cmp     #$06
+	txa
+	sbc     #$00
+	bvc     L0016
+	eor     #$80
+L0016:	bpl     L0026
+;
+; boss_bullet_active[i] = 0;
+;
+	ldy     _i
+	lda     #$00
+	sta     _boss_bullet_active,y
+;
+; if (!player_invincible) {
+;
+	lda     _player_invincible
+	bne     L0025
+;
+; if (player_health > 0) {
+;
+	lda     _player_health
+	beq     L0025
+;
+; player_health--;
+;
+	dec     _player_health
+;
+; if (player_health == 0) {
+;
+L0025:	lda     _player_health
+	bne     L0004
+;
+; on_player_death();
+;
+	jmp     _on_player_death
+;
+; for (i = 0; i < MAX_BOSS_BULLETS; ++i) {
+;
+L0026:	inc     _i
+	jmp     L0021
+;
+; }
+;
+L0004:	rts
 
 .endproc
 
