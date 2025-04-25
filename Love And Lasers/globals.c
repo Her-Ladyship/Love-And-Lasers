@@ -3,8 +3,8 @@
 
 // === GLOBAL VARIABLES ===
 
-unsigned char game_state = STATE_SHMUP;
-unsigned char current_level = 4;
+unsigned char game_state = STATE_TITLE;
+unsigned char current_level = 1;
 unsigned char i = 0;
 unsigned char j = 0;
 unsigned char briefing_started = 0;
@@ -75,7 +75,7 @@ unsigned char ones = 0;
 
 // === SPRITES ===
 const unsigned char player_sprite[] = {
-	0, 0, 0x41, 0,
+	0, 0, 0x96, 1,
 	128
 };
 
@@ -90,12 +90,12 @@ const unsigned char special_bullet_sprite[] = {
 };
 
 const unsigned char enemy_sprite_basic[] = {
-    0, 0, 0x43, 0,
+    0, 0, 0xb7, 3,
     128
 };
 
 const unsigned char enemy_sprite_fast[] = {
-    0, 0, 0x46, 0,
+    0, 0, 0x98, 2,
     128
 };
 
@@ -152,8 +152,79 @@ const unsigned char boss_sprite[] = {
 };
 
 const unsigned char palette[] = {
-	0x0f, 0x01, 0x21, 0x31,
-	0x0f, 0x17, 0x27, 0x37,
-	0x0f, 0x11, 0x21, 0x31,
-	0, 0, 0, 0
+	0x0f, 0x00, 0x10, 0x30,
+	0x0f, 0x11, 0x21, 0x38,
+	0x0f, 0x05, 0x15, 0x25,
+	0x0f, 0x27, 0x1a, 0x29
 };
+
+const unsigned char tough_debris_1[] = {
+    0, 0, 0x92, 1,   8, 0, 0xa3, 1,
+    0, 8, 0xb4, 1,   8, 8, 0x94, 1,
+    0, 16, 0xa2, 1,  8, 16, 0xb2, 1,
+    128
+};
+
+const unsigned char tough_debris_2[] = {
+    0, 0, 0xa3, 1,   8, 0, 0x93, 1,
+    0, 8, 0xb3, 1,   8, 8, 0x92, 1,
+    0, 16, 0xa4, 1,  8, 16, 0xb4, 1,
+    128
+};
+
+const unsigned char tough_debris_3[] = {
+    0, 0, 0xb2, 1,   8, 0, 0xa2, 1,
+    0, 8, 0x92, 1,   8, 8, 0x94, 1,
+    0, 16, 0xb4, 1,  8, 16, 0xa3, 1,
+    128
+};
+
+const unsigned char tough_debris_4[] = {
+    0, 0, 0x94, 2,   8, 0, 0xb3, 2,
+    0, 8, 0xa2, 2,   8, 8, 0xb2, 2,
+    0, 16, 0x93, 2,  8, 16, 0xa4, 2,
+    128
+};
+
+const unsigned char tough_debris_5[] = {
+    0, 0, 0xb4, 2,   8, 0, 0xa3, 2,
+    0, 8, 0x92, 2,   8, 8, 0x93, 2,
+    0, 16, 0xa2, 2,  8, 16, 0xb2, 2,
+    128
+};
+
+const unsigned char tough_debris_6[] = {
+    0, 0, 0x92, 2,   8, 0, 0xa2, 2,
+    0, 8, 0xb3, 2,   8, 8, 0xa4, 2,
+    0, 16, 0x93, 2,  8, 16, 0xb4, 2,
+    128
+};
+
+const unsigned char tough_debris_7[] = {
+    0, 0, 0xa3, 3,   8, 0, 0xb4, 3,
+    0, 8, 0xa2, 3,   8, 8, 0x94, 3,
+    0, 16, 0x93, 3,  8, 16, 0xb2, 3,
+    128
+};
+
+const unsigned char tough_debris_8[] = {
+    0, 0, 0xb2, 3,   8, 0, 0x94, 3,
+    0, 8, 0xa4, 3,   8, 8, 0xb3, 3,
+    0, 16, 0x92, 3,  8, 16, 0xa3, 3,
+    128
+};
+
+const unsigned char tough_debris_9[] = {
+    0, 0, 0xa4, 3,   8, 0, 0x92, 3,
+    0, 8, 0x93, 3,   8, 8, 0xb4, 3,
+    0, 16, 0xa2, 3,  8, 16, 0xb3, 3,
+    128
+};
+
+const unsigned char* tough_debris_variants[9] = {
+    tough_debris_1, tough_debris_2, tough_debris_3,
+    tough_debris_4, tough_debris_5, tough_debris_6,
+    tough_debris_7, tough_debris_8, tough_debris_9
+};
+
+unsigned char enemy_variant[MAX_ENEMIES];

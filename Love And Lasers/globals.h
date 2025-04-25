@@ -144,4 +144,16 @@ extern const unsigned char boss_sprite[];
 
 extern const unsigned char palette[];
 
+extern const unsigned char tough_debris_1[];
+extern const unsigned char tough_debris_2[];
+extern const unsigned char tough_debris_3[];
+extern const unsigned char tough_debris_4[];
+extern const unsigned char tough_debris_5[];
+extern const unsigned char tough_debris_6[];
+extern const unsigned char tough_debris_7[];
+extern const unsigned char tough_debris_8[];
+extern const unsigned char tough_debris_9[];
+
+extern const unsigned char* tough_debris_variants[9];
+
 #endif

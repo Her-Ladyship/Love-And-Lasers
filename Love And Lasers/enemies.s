@@ -39,9 +39,10 @@
 	.import		_enemy_health
 	.import		_enemy_sprite_basic
 	.import		_enemy_sprite_fast
-	.import		_enemy_sprite_tough
 	.import		_boss_bullet_sprite
 	.import		_boss_sprite
+	.import		_tough_debris_variants
+	.import		_enemy_variant
 
 .segment	"BSS"
 
@@ -252,7 +253,7 @@ L0005:	rts
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	sta     _i
-L0010:	lda     _i
+L0011:	lda     _i
 	cmp     #$06
 	bcs     L0005
 ;
@@ -260,7 +261,7 @@ L0010:	lda     _i
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	bne     L0011
+	bne     L0012
 ;
 ; enemy_active[i] = 1;
 ;
@@ -302,12 +303,28 @@ L000E:	jsr     pushax
 	clc
 	adc     #$30
 	ldy     #$00
+	jsr     staspidx
+;
+; enemy_variant[i] = rand8() % 9;
+;
+	lda     #<(_enemy_variant)
+	ldx     #>(_enemy_variant)
+	clc
+	adc     _i
+	bcc     L0010
+	inx
+L0010:	jsr     pushax
+	jsr     _rand8
+	jsr     pushax
+	lda     #$09
+	jsr     tosumoda0
+	ldy     #$00
 	jmp     staspidx
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0011:	inc     _i
-	jmp     L0010
+L0012:	inc     _i
+	jmp     L0011
 ;
 ; }
 ;
@@ -330,23 +347,23 @@ L0005:	rts
 ;
 	lda     _frame_count
 	and     #$01
-	jne     L0038
+	jne     L003B
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
 	sta     _i
-L0033:	lda     _i
+L0036:	lda     _i
 	cmp     #$06
-	bcs     L0038
+	bcs     L003B
 ;
 ; if (enemy_active[i] && !enemy_frozen[i]) {
 ;
 	ldy     _i
 	lda     _enemy_active,y
-	beq     L0037
+	beq     L003A
 	ldy     _i
 	lda     _enemy_frozen,y
-	bne     L0037
+	bne     L003A
 ;
 ; if (enemy_x[i] <= ENEMY_LEFT_LIMIT) {
 ;
@@ -363,7 +380,7 @@ L0033:	lda     _i
 ;
 ; } else {
 ;
-	jmp     L0037
+	jmp     L003A
 ;
 ; if (enemy_type[i] == ENEMY_TYPE_BASIC) {
 ;
@@ -372,7 +389,7 @@ L000E:	ldy     _i
 ;
 ; } else if (enemy_type[i] == ENEMY_TYPE_FAST) {
 ;
-	beq     L0045
+	beq     L0048
 	ldy     _i
 	lda     _enemy_type,y
 	cmp     #$01
@@ -395,15 +412,15 @@ L0018:	sta     ptr1
 ;
 ; } else if (enemy_type[i] == ENEMY_TYPE_TOUGH) {
 ;
-	jmp     L0031
+	jmp     L0033
 L0016:	ldy     _i
 	lda     _enemy_type,y
 	cmp     #$02
-	bne     L0037
+	bne     L003A
 ;
 ; enemy_x[i] -= 1; // tough but slow
 ;
-L0045:	lda     #<(_enemy_x)
+L0048:	lda     #<(_enemy_x)
 	ldx     #>(_enemy_x)
 	clc
 	adc     _i
@@ -415,20 +432,20 @@ L001C:	sta     ptr1
 	lda     (ptr1),y
 	sec
 	sbc     #$01
-L0031:	sta     (ptr1),y
+L0033:	sta     (ptr1),y
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0037:	inc     _i
-	jmp     L0033
+L003A:	inc     _i
+	jmp     L0036
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L0038:	lda     #$00
+L003B:	lda     #$00
 	sta     _i
-L0039:	lda     _i
+L003C:	lda     _i
 	cmp     #$06
-	bcc     L0046
+	bcc     L0049
 ;
 ; }
 ;
@@ -436,9 +453,9 @@ L0039:	lda     _i
 ;
 ; if (enemy_active[i]) {
 ;
-L0046:	ldy     _i
+L0049:	ldy     _i
 	lda     _enemy_active,y
-	beq     L003A
+	jeq     L003D
 ;
 ; if (enemy_type[i] == ENEMY_TYPE_BASIC) {         
 ;
@@ -462,7 +479,7 @@ L0046:	ldy     _i
 ;
 ; } else if (enemy_type[i] == ENEMY_TYPE_FAST) {
 ;
-	jmp     L0032
+	jmp     L0034
 L0023:	ldy     _i
 	lda     _enemy_type,y
 	cmp     #$01
@@ -484,13 +501,13 @@ L0023:	ldy     _i
 ;
 ; } else if (enemy_type[i] == ENEMY_TYPE_TOUGH) {
 ;
-	jmp     L0032
+	jmp     L0034
 L0028:	ldy     _i
 	lda     _enemy_type,y
 	cmp     #$02
-	bne     L003A
+	bne     L003D
 ;
-; oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_tough);
+; oam_meta_spr(enemy_x[i], enemy_y[i], tough_debris_variants[enemy_variant[i]]);
 ;
 	jsr     decsp2
 	ldy     _i
@@ -501,14 +518,29 @@ L0028:	ldy     _i
 	lda     _enemy_y,y
 	ldy     #$00
 	sta     (sp),y
-	lda     #<(_enemy_sprite_tough)
-	ldx     #>(_enemy_sprite_tough)
-L0032:	jsr     _oam_meta_spr
+	ldy     _i
+	ldx     #$00
+	lda     _enemy_variant,y
+	asl     a
+	bcc     L0035
+	inx
+	clc
+L0035:	adc     #<(_tough_debris_variants)
+	sta     ptr1
+	txa
+	adc     #>(_tough_debris_variants)
+	sta     ptr1+1
+	ldy     #$01
+	lda     (ptr1),y
+	tax
+	dey
+	lda     (ptr1),y
+L0034:	jsr     _oam_meta_spr
 ;
 ; for (i = 0; i < MAX_ENEMIES; ++i) {
 ;
-L003A:	inc     _i
-	jmp     L0039
+L003D:	inc     _i
+	jmp     L003C
 
 .endproc
 

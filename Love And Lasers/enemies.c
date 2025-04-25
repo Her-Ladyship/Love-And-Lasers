@@ -4,6 +4,9 @@
 #include "lib/nesdoug.h"
 #include "globals.h"
 
+extern const unsigned char* tough_sprite_variants[27];
+extern unsigned char enemy_variant[MAX_ENEMIES];
+
 unsigned char enemy_x[MAX_ENEMIES];
 unsigned char enemy_y[MAX_ENEMIES];
 unsigned char enemy_active[MAX_ENEMIES];
@@ -48,6 +51,8 @@ void spawn_tough(void) {
 				enemy_health[i] = 4;
 				enemy_x[i] = 240;
 				enemy_y[i] = PLAYFIELD_TOP + (rand8() % (PLAYFIELD_BOTTOM - PLAYFIELD_TOP));
+				enemy_variant[i] = rand8() % 9;
+
 				break;
 			}
 		}
@@ -82,7 +87,7 @@ void update_enemies(void) {
 			} else if (enemy_type[i] == ENEMY_TYPE_FAST) {
 			    oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_fast);
 			} else if (enemy_type[i] == ENEMY_TYPE_TOUGH) {
-			    oam_meta_spr(enemy_x[i], enemy_y[i], enemy_sprite_tough);
+			    oam_meta_spr(enemy_x[i], enemy_y[i], tough_debris_variants[enemy_variant[i]]);
 			}
 		}
 	}

@@ -14,7 +14,7 @@
 void main(void) {
 	ppu_off();
 	pal_bg(palette);
-	pal_spr(&palette[4]);
+	pal_spr(palette);
 	set_vram_buffer();
 	ppu_on_all();
 

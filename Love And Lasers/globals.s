@@ -74,13 +74,24 @@
 	.export		_boss_bullet_sprite
 	.export		_boss_sprite
 	.export		_palette
+	.export		_tough_debris_1
+	.export		_tough_debris_2
+	.export		_tough_debris_3
+	.export		_tough_debris_4
+	.export		_tough_debris_5
+	.export		_tough_debris_6
+	.export		_tough_debris_7
+	.export		_tough_debris_8
+	.export		_tough_debris_9
+	.export		_tough_debris_variants
+	.export		_enemy_variant
 
 .segment	"DATA"
 
 _game_state:
-	.byte	$03
+	.byte	$00
 _current_level:
-	.byte	$04
+	.byte	$01
 _i:
 	.byte	$00
 _j:
@@ -163,14 +174,24 @@ _enemy_sprites:
 	.addr	_enemy_sprite_basic
 	.addr	_enemy_sprite_fast
 	.addr	_enemy_sprite_tough
+_tough_debris_variants:
+	.addr	_tough_debris_1
+	.addr	_tough_debris_2
+	.addr	_tough_debris_3
+	.addr	_tough_debris_4
+	.addr	_tough_debris_5
+	.addr	_tough_debris_6
+	.addr	_tough_debris_7
+	.addr	_tough_debris_8
+	.addr	_tough_debris_9
 
 .segment	"RODATA"
 
 _player_sprite:
 	.byte	$00
 	.byte	$00
-	.byte	$41
-	.byte	$00
+	.byte	$96
+	.byte	$01
 	.byte	$80
 _bullet_sprite:
 	.byte	$00
@@ -187,14 +208,14 @@ _special_bullet_sprite:
 _enemy_sprite_basic:
 	.byte	$00
 	.byte	$00
-	.byte	$43
-	.byte	$00
+	.byte	$B7
+	.byte	$03
 	.byte	$80
 _enemy_sprite_fast:
 	.byte	$00
 	.byte	$00
-	.byte	$46
-	.byte	$00
+	.byte	$98
+	.byte	$02
 	.byte	$80
 _enemy_sprite_tough:
 	.byte	$00
@@ -312,21 +333,255 @@ _boss_sprite:
 	.byte	$80
 _palette:
 	.byte	$0F
-	.byte	$01
-	.byte	$21
-	.byte	$31
-	.byte	$0F
-	.byte	$17
-	.byte	$27
-	.byte	$37
+	.byte	$00
+	.byte	$10
+	.byte	$30
 	.byte	$0F
 	.byte	$11
 	.byte	$21
-	.byte	$31
+	.byte	$38
+	.byte	$0F
+	.byte	$05
+	.byte	$15
+	.byte	$25
+	.byte	$0F
+	.byte	$27
+	.byte	$1A
+	.byte	$29
+_tough_debris_1:
 	.byte	$00
 	.byte	$00
+	.byte	$92
+	.byte	$01
+	.byte	$08
+	.byte	$00
+	.byte	$A3
+	.byte	$01
+	.byte	$00
+	.byte	$08
+	.byte	$B4
+	.byte	$01
+	.byte	$08
+	.byte	$08
+	.byte	$94
+	.byte	$01
+	.byte	$00
+	.byte	$10
+	.byte	$A2
+	.byte	$01
+	.byte	$08
+	.byte	$10
+	.byte	$B2
+	.byte	$01
+	.byte	$80
+_tough_debris_2:
 	.byte	$00
 	.byte	$00
+	.byte	$A3
+	.byte	$01
+	.byte	$08
+	.byte	$00
+	.byte	$93
+	.byte	$01
+	.byte	$00
+	.byte	$08
+	.byte	$B3
+	.byte	$01
+	.byte	$08
+	.byte	$08
+	.byte	$92
+	.byte	$01
+	.byte	$00
+	.byte	$10
+	.byte	$A4
+	.byte	$01
+	.byte	$08
+	.byte	$10
+	.byte	$B4
+	.byte	$01
+	.byte	$80
+_tough_debris_3:
+	.byte	$00
+	.byte	$00
+	.byte	$B2
+	.byte	$01
+	.byte	$08
+	.byte	$00
+	.byte	$A2
+	.byte	$01
+	.byte	$00
+	.byte	$08
+	.byte	$92
+	.byte	$01
+	.byte	$08
+	.byte	$08
+	.byte	$94
+	.byte	$01
+	.byte	$00
+	.byte	$10
+	.byte	$B4
+	.byte	$01
+	.byte	$08
+	.byte	$10
+	.byte	$A3
+	.byte	$01
+	.byte	$80
+_tough_debris_4:
+	.byte	$00
+	.byte	$00
+	.byte	$94
+	.byte	$02
+	.byte	$08
+	.byte	$00
+	.byte	$B3
+	.byte	$02
+	.byte	$00
+	.byte	$08
+	.byte	$A2
+	.byte	$02
+	.byte	$08
+	.byte	$08
+	.byte	$B2
+	.byte	$02
+	.byte	$00
+	.byte	$10
+	.byte	$93
+	.byte	$02
+	.byte	$08
+	.byte	$10
+	.byte	$A4
+	.byte	$02
+	.byte	$80
+_tough_debris_5:
+	.byte	$00
+	.byte	$00
+	.byte	$B4
+	.byte	$02
+	.byte	$08
+	.byte	$00
+	.byte	$A3
+	.byte	$02
+	.byte	$00
+	.byte	$08
+	.byte	$92
+	.byte	$02
+	.byte	$08
+	.byte	$08
+	.byte	$93
+	.byte	$02
+	.byte	$00
+	.byte	$10
+	.byte	$A2
+	.byte	$02
+	.byte	$08
+	.byte	$10
+	.byte	$B2
+	.byte	$02
+	.byte	$80
+_tough_debris_6:
+	.byte	$00
+	.byte	$00
+	.byte	$92
+	.byte	$02
+	.byte	$08
+	.byte	$00
+	.byte	$A2
+	.byte	$02
+	.byte	$00
+	.byte	$08
+	.byte	$B3
+	.byte	$02
+	.byte	$08
+	.byte	$08
+	.byte	$A4
+	.byte	$02
+	.byte	$00
+	.byte	$10
+	.byte	$93
+	.byte	$02
+	.byte	$08
+	.byte	$10
+	.byte	$B4
+	.byte	$02
+	.byte	$80
+_tough_debris_7:
+	.byte	$00
+	.byte	$00
+	.byte	$A3
+	.byte	$03
+	.byte	$08
+	.byte	$00
+	.byte	$B4
+	.byte	$03
+	.byte	$00
+	.byte	$08
+	.byte	$A2
+	.byte	$03
+	.byte	$08
+	.byte	$08
+	.byte	$94
+	.byte	$03
+	.byte	$00
+	.byte	$10
+	.byte	$93
+	.byte	$03
+	.byte	$08
+	.byte	$10
+	.byte	$B2
+	.byte	$03
+	.byte	$80
+_tough_debris_8:
+	.byte	$00
+	.byte	$00
+	.byte	$B2
+	.byte	$03
+	.byte	$08
+	.byte	$00
+	.byte	$94
+	.byte	$03
+	.byte	$00
+	.byte	$08
+	.byte	$A4
+	.byte	$03
+	.byte	$08
+	.byte	$08
+	.byte	$B3
+	.byte	$03
+	.byte	$00
+	.byte	$10
+	.byte	$92
+	.byte	$03
+	.byte	$08
+	.byte	$10
+	.byte	$A3
+	.byte	$03
+	.byte	$80
+_tough_debris_9:
+	.byte	$00
+	.byte	$00
+	.byte	$A4
+	.byte	$03
+	.byte	$08
+	.byte	$00
+	.byte	$92
+	.byte	$03
+	.byte	$00
+	.byte	$08
+	.byte	$93
+	.byte	$03
+	.byte	$08
+	.byte	$08
+	.byte	$B4
+	.byte	$03
+	.byte	$00
+	.byte	$10
+	.byte	$A2
+	.byte	$03
+	.byte	$08
+	.byte	$10
+	.byte	$B3
+	.byte	$03
+	.byte	$80
 
 .segment	"BSS"
 
@@ -355,5 +610,7 @@ _enemy_box:
 _enemy_type:
 	.res	6,$00
 _enemy_health:
+	.res	6,$00
+_enemy_variant:
 	.res	6,$00
 

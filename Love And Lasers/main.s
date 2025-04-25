@@ -142,10 +142,10 @@ S0003	:=	S0011+11
 	ldx     #>(_palette)
 	jsr     _pal_bg
 ;
-; pal_spr(&palette[4]);
+; pal_spr(palette);
 ;
-	lda     #<(_palette+4)
-	ldx     #>(_palette+4)
+	lda     #<(_palette)
+	ldx     #>(_palette)
 	jsr     _pal_spr
 ;
 ; set_vram_buffer();
